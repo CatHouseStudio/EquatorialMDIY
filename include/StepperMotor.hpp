@@ -7,6 +7,8 @@ class  StepperMotor {
         void step(int steps, bool direction, int speed);
         void rotateWithEarth();
         void setGearRatio(float newRatio);
+        void stop();
+        void reset();
     private:
         int _stepPin, _dirPin;
         float _gearRatio;

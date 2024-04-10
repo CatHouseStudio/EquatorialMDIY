@@ -40,3 +40,15 @@ void StepperMotor::rotateWithEarth() {
     
     
 }
+
+void StepperMotor::stop() {
+    noInterrupts();
+    digitalWrite(_stepPin, LOW);
+    interrupts();
+}
+
+void StepperMotor::reset() {
+    //假设能回到初始状态
+    //需要知道当前位置
+    step(200, false, 500);
+}
