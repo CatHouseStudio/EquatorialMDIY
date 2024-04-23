@@ -1,0 +1,60 @@
+----
+//获取赤道仪当前状态
+POST http://localhost:3000/status
+content-type: application/json
+{
+
+}
+response:
+{
+    t（int）：运行时长，单位为秒
+    s（object）：当前状态，包括：
+        d（int）：方向（0 = 顺时针，1 = 逆时针，2 = 停止）
+        t（int）：速度类型
+        s（float）：速度
+}
+
+//获取赤道仪的配置
+POST http://localhost:3000/config
+content-type: application/json
+{
+  
+}
+response: 
+{
+    ssid（string）：Wi-Fi SSID
+    pwd（string）：Wi-Fi密码
+    ratio（int）：减速比
+}
+
+//设置赤道仪的状态
+POST http://localhost:3000/set_status HTTP/1.1
+content-type: application/json
+{
+    d（int）：方向
+    t（int）：速度类型
+    s（float）：速度
+
+}
+response:
+{
+    status（string）：状态，"OK"表示成功
+}
+
+
+
+
+//设置赤道仪的配置
+POST http://localhost:3000/set_config
+content-type: application/json
+{
+    ssid（string）：Wi-Fi SSID。
+    pwd（string）：Wi-Fi密码。
+    ratio（int）：减速比。
+}
+response:
+{
+    status(string): 状态，"OK"表示成功
+}
+
+

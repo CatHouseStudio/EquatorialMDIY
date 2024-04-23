@@ -145,22 +145,27 @@ inline void Initialize_Pin() // This function is used for Initializing
     pinMode(Pin_Limited_Switch_3, INPUT_PULLUP);
     // X Group
     pinMode(Pin_Stepper_Motor_X_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_X_En,LOW);
     pinMode(Pin_Stepper_Motor_X_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_X_Step, OUTPUT);
     // Y Group
     pinMode(Pin_Stepper_Motor_Y_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_Y_En,LOW);
     pinMode(Pin_Stepper_Motor_Y_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_Y_Step, OUTPUT);
     // Z Group
     pinMode(Pin_Stepper_Motor_Z_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_Z_En,LOW);
     pinMode(Pin_Stepper_Motor_Z_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_Z_Step, OUTPUT);
     // E0 Group
     pinMode(Pin_Stepper_Motor_E0_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_E0_En,LOW);
     pinMode(Pin_Stepper_Motor_E0_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_E0_Step, OUTPUT);
     // E1 Group
     pinMode(Pin_Stepper_Motor_E1_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_E1_En,LOW);
     pinMode(Pin_Stepper_Motor_E1_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_E1_Step, OUTPUT);
     // Limited Switch Pin.
