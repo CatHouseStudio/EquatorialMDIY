@@ -59,6 +59,7 @@
 #pragma once
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "SPIFFS.h"
 // ================================================
 
 // Set the Button for start and stop
@@ -135,10 +136,7 @@ const uint32_t Stepper_Motor_E1_LOW_Dealyms = 800;
 inline void Initialize_Pin() // This function is used for Initializing
 {
 
-    // Set PinMode
-    // Led built-in
-    pinMode(LED_BUILTIN, OUTPUT);
-    digitalWrite(LED_BUILTIN, HIGH);
+
     // Button
     pinMode(Pin_Button, INPUT_PULLUP);
     // Limited Switch

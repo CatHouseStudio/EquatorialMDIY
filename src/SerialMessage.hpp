@@ -1,7 +1,5 @@
 #pragma once
 #include "Configuration.h"
-#include "Arduino_FreeRTOS.h"
-#include "queue.h"
 
 // functions declaration
 void Serial0_Message_Queue_Init(void);
