@@ -1,6 +1,7 @@
 #pragma once
 #include "Configuration.h"
 #include "SerialMessage.hpp"
+#include "WiFiApSta.hpp"
 #include "WebServer.hpp"
 // tasks
 void task_StepperMotor_Init(void *parameters);
@@ -9,11 +10,11 @@ void task_System_Toggle(void *parameters);
 void task_Serial0Output(void *parameter);
 void task_AsyncWebServer_Start(void *parameters);
 // task handle
-TaskHandle_t xTaskHandle_StepperMotor_Init;
-TaskHandle_t xTaskHandle_StepperMotor_Work;
-TaskHandle_t xTaskHandle_System_Toggle;
-TaskHandle_t xTaskHandle_Serial0Output;
-TaskHandle_t xTaskHandle_AsyncWebServer_Start;
+static TaskHandle_t xTaskHandle_StepperMotor_Init;
+static TaskHandle_t xTaskHandle_StepperMotor_Work;
+static TaskHandle_t xTaskHandle_System_Toggle;
+static TaskHandle_t xTaskHandle_Serial0Output;
+static TaskHandle_t xTaskHandle_AsyncWebServer_Start;
 // Declaring a global variable of type SemaphoreHandle_t
 SemaphoreHandle_t interruptSemaphore;
 void Semaphore_Init(void);
@@ -75,38 +76,36 @@ void task_Create(void)
     xTaskCreate(
         task_AsyncWebServer_Start,
         "AsyncWebServer Start",
-        configMINIMAL_STACK_SIZE+256,   // need to calculate the size of the task
+        configMINIMAL_STACK_SIZE + 256, // need to calculate the size of the task
         NULL,
         configMAX_PRIORITIES - 3,
         &xTaskHandle_AsyncWebServer_Start);
+
+    if (xTaskHandle_StepperMotor_Init != NULL)
+    {
+        // Suspend the Stepper motor
+        vTaskSuspend(xTaskHandle_StepperMotor_Init);
+    }
+    if (xTaskHandle_StepperMotor_Work != NULL)
+    {
+        // Suspend the Stepper motor
+        vTaskSuspend(xTaskHandle_StepperMotor_Work);
+    }
 }
 void task_AsyncWebServer_Start(void *parameters)
 {
-    WiFi.mode(WIFI_STA);
-    //! you must change the wifi ssid and passwd
-    const char *ssid = "ssid";
-    const char *passwd = "password";
-    WiFi.begin(ssid, passwd);
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-    xQueueSend(queueHandle_Serial0, &"server", (TickType_t)0);
-    char ip[100] = "IP address: ";
-    strcat(ip, WiFi.localIP().toString().c_str());
-    const char *outIP = ip;
-    xQueueSend(queueHandle_Serial0, &outIP, (TickType_t)0);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
-    //   initWebSocket();
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send_P(200, "text/html", "Hi! This is ElegantOTA AsyncDemo."); });
-
+    WiFi_AP_STA_Init();
+    WebServerEvent();
     ElegantOTA.begin(&server); // Start ElegantOTA
     // ElegantOTA callbacks
     ElegantOTA.onStart(onOTAStart);
     ElegantOTA.onProgress(onOTAProgress);
     ElegantOTA.onEnd(onOTAEnd);
     server.begin();
+    for (;;)
+    {
+        ElegantOTA.loop();
+    }
 }
 
 void task_StepperMotor_Init(void *parameters)
