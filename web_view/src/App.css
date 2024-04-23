@@ -1,0 +1,201 @@
+html, body, #root {
+  height: 100vh;
+  min-height: 100%;
+  width: 100%;
+}
+
+.APP {
+  height: 100%;
+  width: 100%;
+  padding: 2%;
+}
+
+.card {
+  border-radius: 20px;
+}
+
+.btn {
+  border-radius: 15px;
+}
+
+@media screen and (min-width: 576px) {
+  .btn-bar {
+    min-height: 100%;
+    height: 100%;
+    width: 8%;
+    float: left;
+    text-align: center;
+  }
+
+  .btn-bar .btn {
+    height: 25%;
+    width: 70%;
+    writing-mode: vertical-lr;
+    padding: 10%;
+    margin: 20% 0;
+    font-size: 1.3em;
+    line-height: 1.4em;
+  }
+
+  .card-div {
+    /*height: 100%;*/
+    min-height: 100%;
+    width: 46%;
+    padding: 0 1%;
+    /*margin: 0;*/
+    /*display: inline-flex;*/
+    float: left;
+  }
+
+  .card {
+    height: 100%;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .btn-bar {
+    height: 8%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    text-align: center;
+  }
+
+  .btn-bar .btn {
+    height: 70%;
+    width: 40%;
+    padding: 0;
+    margin: 0 5%;
+    font-size: 1.4em;
+  }
+
+  .card-div {
+    /*height: 46%;*/
+    padding: 1% 0;
+  }
+
+  .card {
+    height: 100%;
+  }
+}
+
+.in-card-part {
+  font-size: 1em;
+  line-height: 1.3em;
+  min-width: 50%;
+  display: inline-grid;
+  /*float: left;*/
+  max-height: 100%;
+}
+
+.card-title {
+  font-size: 1.6em;
+  font-weight: bold;
+  text-align: center;
+}
+
+.in-card-btn-group {
+  width: 100%;
+  /*position: absolute;*/
+  bottom: 0;
+  left: 0;
+  margin: 2% 0;
+  text-align: center;
+}
+
+.in-card-btn-group .btn {
+  width: 40%;
+  margin: 0 3%;
+  font-size: 1.4em;
+}
+
+.in-check-control {
+  display: inline;
+  width: 5em;
+}
+
+hr {
+  margin: 10px;
+}
+
+.card-content {
+  height: 100%;
+}
+
+.info-pad {
+  width: 96%;
+  text-align: center;
+  padding: 10% 0;
+  font-size: 1.3em;
+  font-weight: bold;
+  border: solid black;
+  margin: 2%;
+}
+
+.info-pad p {
+  margin: 10px 0;
+}
+
+.red_mode {
+  background-color: #6b0000 !important;
+  border-color: #1b0000 !important;
+  color: black !important;
+}
+
+.red_mode .card {
+  background-color: #6d0000 !important;
+  border-color: #1b0000 !important;
+  color: black !important;
+}
+
+.red_mode .btn {
+  background-color: #6d0000 !important;
+  border-color: #1b0000 !important;
+  color: black !important;
+}
+
+.red_mode input {
+  background-color: #6d0000 !important;
+  border-color: #1b0000 !important;
+  color: black !important;
+}
+
+.red_mode .modal-content {
+  background-color: #6d0000 !important;
+  border-color: #1b0000 !important;
+  color: black !important;
+}
+
+.red_mode .btn:hover {
+  background-color: #8b0000 !important;
+  border-color: #3b0000 !important;
+  color: black !important;
+}
+
+.red_mode input[type='radio']:after {
+  width: 16px;
+  height: 16px;
+  border-radius: 16px;
+  top: -1px;
+  left: -1px;
+  position: relative;
+  background-color: #6b0000;
+  content: '';
+  display: inline-block;
+  visibility: visible;
+  border: 1px solid black;
+}
+
+.red_mode input[type='radio']:checked:after {
+  width: 16px;
+  height: 16px;
+  border-radius: 16px;
+  top: -1px;
+  left: -1px;
+  position: relative;
+  background-color: black;
+  content: '';
+  display: inline-block;
+  visibility: visible;
+  border: 1px solid black;
+}
