@@ -6,38 +6,14 @@
 // tasks
 void task_StepperMotor_Init(void *parameters);
 void task_StepperMotor_Work(void *parameters);
-void task_System_Toggle(void *parameters);
 void task_Serial0Output(void *parameter);
 void task_AsyncWebServer_Start(void *parameters);
 // task handle
 static TaskHandle_t xTaskHandle_StepperMotor_Init;
 static TaskHandle_t xTaskHandle_StepperMotor_Work;
-static TaskHandle_t xTaskHandle_System_Toggle;
 static TaskHandle_t xTaskHandle_Serial0Output;
 static TaskHandle_t xTaskHandle_AsyncWebServer_Start;
-// Declaring a global variable of type SemaphoreHandle_t
-SemaphoreHandle_t interruptSemaphore;
-void Semaphore_Init(void);
-void interruptHandler();
-void Semaphore_Init(void)
-{
-    interruptSemaphore = xSemaphoreCreateBinary();
-    if (interruptSemaphore != NULL)
-    {
-        // Attach interrupt for Arduino digital pin
-        attachInterrupt(digitalPinToInterrupt(Pin_Button), interruptHandler, CHANGE);
-    }
-}
-void interruptHandler()
-{
-    /**
-     * Give semaphore in the interrupt handler
-     * https://www.freertos.org/a00124.html
-     */
-    //! maybe need mutex
-    // todo use xQueueSendFromISR xSemaphoreGiveFromISR
-    xSemaphoreGiveFromISR(interruptSemaphore, NULL);
-}
+
 // task create
 void task_Create(void);
 
@@ -59,13 +35,6 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 5,
         &xTaskHandle_StepperMotor_Work);
-    xTaskCreate(
-        task_System_Toggle,
-        "System Toggle",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        configMAX_PRIORITIES - 1,
-        &xTaskHandle_System_Toggle);
     xTaskCreate(
         task_Serial0Output,
         "Serial0 Output",
@@ -112,38 +81,18 @@ void task_StepperMotor_Init(void *parameters)
 {
     for (;;)
     {
-        /* code */
+        digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
+        ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution); 
+        ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);                    
     }
 }
 void task_StepperMotor_Work(void *parameters)
 {
     for (;;)
     {
-        /* code */
-    }
-}
-void task_System_Toggle(void *parameters)
-{
-    for (;;)
-    {
-        if (xSemaphoreTake(interruptSemaphore, portMAX_DELAY) == pdPASS)
-        {
-            if (digitalRead(Pin_Button) == Button_Trig_Status)
-            { // button has been pressed
-
-                const char *msg = "Button Pressed";
-                xQueueSend(queueHandle_Serial0, (void *)&msg, (TickType_t)0);
-                //! should change the system status
-            }
-            else
-            {
-                // button has been pressed
-
-                const char *msg = "Button Released";
-                xQueueSend(queueHandle_Serial0, (void *)&msg, (TickType_t)0);
-                //! should change the system status
-            }
-        }
+        digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Work_Dir);
+        ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution); 
+        ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);  
     }
 }
 void task_Serial0Output(void *parameter)
