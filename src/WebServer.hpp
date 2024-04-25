@@ -65,16 +65,26 @@ void WebServerEvent()
 		return;
 	}
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/index.html", "text/html"); });
+			  { 
+				xQueueSend(queueHandle_Serial0, &"Load index.html", (TickType_t)0);
+				request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
 	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
+			  { 
+				xQueueSend(queueHandle_Serial0, &"Load main.98185c89.css", (TickType_t)0);
+				request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
 	server.on("/main.b11ab86c.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.b11ab86c.js", "application/javascript"); });
+			  { 
+				xQueueSend(queueHandle_Serial0, &"Load main.b11ab86c.js", (TickType_t)0);
+				request->send(SPIFFS, "/main.b11ab86c.js", "application/javascript"); });
 	server.on("/main.c051389f.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
+			  { 
+				xQueueSend(queueHandle_Serial0, &"Load main.c051389f.js", (TickType_t)0);
+				request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
+			  { 
+				xQueueSend(queueHandle_Serial0, &"Load asset-manifest.json", (TickType_t)0);
+				request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
 
 	// Server api
 	// server.on("/buzz", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -85,16 +95,22 @@ void WebServerEvent()
 	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 						 {
         if(request->method()==HTTP_POST && request->contentType()=="application/json"){
+			xQueueSend(queueHandle_Serial0, &"HTTP_POST", (TickType_t)0);
             if(request->url()=="/status"){
+				xQueueSend(queueHandle_Serial0, &"Enter /status", (TickType_t)0);
                 handleGetStatus(request,data);
             }else if(request->url()=="/config"){
+				xQueueSend(queueHandle_Serial0, &"Enter /config", (TickType_t)0);
                 handleGetConfig(request,data);
             }else if(request->url()=="/set_status"){
+				xQueueSend(queueHandle_Serial0, &"Enter /set_status", (TickType_t)0);
                 handleSetStatus(request,data);
             }else if(request->url()=="/set_config"){
+				xQueueSend(queueHandle_Serial0, &"Enter /set_config", (TickType_t)0);
                 handleSetStatus(request,data);
             }
             else{
+				xQueueSend(queueHandle_Serial0, &"Not found api", (TickType_t)0);
                 request->send(500);
             }
         } });
@@ -106,6 +122,7 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	DeserializationError error = deserializeJson(reqJson, data);
 	if (error)
 	{
+		xQueueSend(queueHandle_Serial0, &"/status Invalid JSON", (TickType_t)0);
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
@@ -127,6 +144,7 @@ void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	DeserializationError error = deserializeJson(reqJson, data);
 	if (error)
 	{
+		xQueueSend(queueHandle_Serial0, &"/config Invalid JSON", (TickType_t)0);
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
@@ -146,6 +164,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	DeserializationError error = deserializeJson(reqJson, data);
 	if (error)
 	{
+		xQueueSend(queueHandle_Serial0, &"/set_status Invalid JSON", (TickType_t)0);
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
@@ -154,6 +173,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	float s = reqJson["s"];
 	//! Write your logic here
 	// TODO: set stepper motor work method
+	xQueueSend(queueHandle_Serial0, &"DEBUG: set stepper motor", (TickType_t)0);
 	digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
 	ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution);
 	ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
@@ -173,6 +193,7 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	DeserializationError error = deserializeJson(reqJson, data);
 	if (error)
 	{
+		xQueueSend(queueHandle_Serial0, &"/set_config Invalid JSON", (TickType_t)0);
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
