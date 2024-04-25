@@ -1,9 +1,9 @@
 #include "SerialMessage.hpp"
 #include <WiFi.h>
 #include <AsyncTCP.h>
-void WiFi_AP_STA_Init();
-
-void WiFi_AP_STA_Init()
+void WiFi_AP_Init();
+void WiFi_STA_Init();
+void WiFi_STA_Init()
 {
     WiFi.mode(WIFI_AP_STA);
     //! you must change the wifi ssid and passwd
@@ -20,7 +20,10 @@ void WiFi_AP_STA_Init()
     const char *staIP = sta_ip;
     xQueueSend(queueHandle_Serial0, &staIP, (TickType_t)0);
     vTaskDelay(100 / portTICK_PERIOD_MS);
+}
 
+void WiFi_AP_Init()
+{
     // AP
     // Replace with your network credentials
     const char *ap_ssid = "ESP32-Access-Point";
