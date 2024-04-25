@@ -70,9 +70,11 @@ void WebServerEvent()
 	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
 	server.on("/main.b11ab86c.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "main.b11ab86c.js", "application/javascript"); });
-	server.on("/asset-manifest.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/asset-manifest.js", "application/json"); });
+			  { request->send(SPIFFS, "/main.b11ab86c.js", "application/javascript"); });
+	server.on("/main.c051389f.js", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
+	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
 
 	// Server api
 	// server.on("/buzz", HTTP_GET, [](AsyncWebServerRequest *request)
