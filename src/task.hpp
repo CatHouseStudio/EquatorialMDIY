@@ -22,7 +22,7 @@ void task_Create(void)
     xTaskCreate(
         task_Serial0Output,
         "Serial0 Output",
-        configMINIMAL_STACK_SIZE+8192,
+        configMINIMAL_STACK_SIZE + 8192,
         NULL,
         configMAX_PRIORITIES - 3,
         &xTaskHandle_Serial0Output);
