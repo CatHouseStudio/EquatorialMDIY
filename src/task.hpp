@@ -22,14 +22,14 @@ void task_Create(void)
     xTaskCreate(
         task_Serial0Output,
         "Serial0 Output",
-        configMINIMAL_STACK_SIZE,
+        configMINIMAL_STACK_SIZE + 8192,
         NULL,
         configMAX_PRIORITIES - 3,
         &xTaskHandle_Serial0Output);
     xTaskCreate(
         task_AsyncWebServer_Start,
         "AsyncWebServer Start",
-        configMINIMAL_STACK_SIZE + 256, // need to calculate the size of the task
+        configMINIMAL_STACK_SIZE + 40960, // need to calculate the size of the task
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer_Start);
