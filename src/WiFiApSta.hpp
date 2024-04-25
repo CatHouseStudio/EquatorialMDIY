@@ -7,8 +7,8 @@ void WiFi_AP_STA_Init()
 {
     WiFi.mode(WIFI_AP_STA);
     //! you must change the wifi ssid and passwd
-    const char *sta_ssid = "ssid";
-    const char *sta_passwd = "password";
+    const char *sta_ssid = "ax3000-818";
+    const char *sta_passwd = "fl123456789";
     WiFi.begin(sta_ssid, sta_passwd);
     while (WiFi.status() != WL_CONNECTED)
     {
