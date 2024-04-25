@@ -62,109 +62,31 @@
 #include "SPIFFS.h"
 // ================================================
 
-// Set the Button for start and stop
-const uint8_t Pin_Button = 3;
-const uint8_t Button_Trig_Status = LOW;
-// Set the Limited Switch Pin.
-const uint8_t Pin_Limited_Switch_1 = 15;
-const uint8_t Limited_Switch_1_Trig_Status = LOW;
-const uint8_t Pin_Limited_Switch_2 = 18;
-const uint8_t Limited_Switch_2_Trig_Status = LOW;
-const uint8_t Pin_Limited_Switch_3 = 19;
-const uint8_t Limited_Switch_3_Trig_Status = LOW;
 // Set the Stepper Motors' PIN.
 // X Group
-const uint8_t Pin_Stepper_Motor_X_En = 38;
-const uint8_t Pin_Stepper_Motor_X_Dir = 55;
-const uint8_t Pin_Stepper_Motor_X_Step = 54;
-// Y Group
-const uint8_t Pin_Stepper_Motor_Y_En = 56;
-const uint8_t Pin_Stepper_Motor_Y_Dir = 61;
-const uint8_t Pin_Stepper_Motor_Y_Step = 60;
-// Z Group
-const uint8_t Pin_Stepper_Motor_Z_En = 62;
-const uint8_t Pin_Stepper_Motor_Z_Dir = 48;
-const uint8_t Pin_Stepper_Motor_Z_Step = 46;
-// E0 Group
-const uint8_t Pin_Stepper_Motor_E0_En = 24;
-const uint8_t Pin_Stepper_Motor_E0_Dir = 28;
-const uint8_t Pin_Stepper_Motor_E0_Step = 26;
-// E1 Group
-const uint8_t Pin_Stepper_Motor_E1_En = 30;
-const uint8_t Pin_Stepper_Motor_E1_Dir = 34;
-const uint8_t Pin_Stepper_Motor_E1_Step = 36;
+// TODO you must change the pin value
+const uint8_t Pin_Stepper_Motor_En = -1;
+const uint8_t Pin_Stepper_Motor_Dir = -1;
+const uint8_t Pin_Stepper_Motor_Step = -1;
 
 // =============================================
 // Set the Serials' Bit rate
 const unsigned long Serial_0_Bit_Rate = 115200;
 const unsigned long Serial_1_Bit_Rate = 115200;
-const unsigned long Serial_2_Bit_Rate = 115200;
-const unsigned long Serial_3_Bit_Rate = 115200;
+
 // Set the Stepper Motors' Parameter.
-// Recommend 800; At least "HIGH"+"LOW">=400 AND ("HIGH">=20 OR "LOW">=20)
 // X Group
-const uint8_t Stepper_Motor_X_Initialize_Dir = HIGH;
-const uint8_t Stepper_Motor_X_Work_Dir = LOW;
-const uint32_t Stepper_Motor_X_Loop_Times = 0;
-const uint32_t Stepper_Motor_X_HIGH_Dealyms = 800;
-const uint32_t Stepper_Motor_X_LOW_Dealyms = 800;
-// Y Group
-const uint8_t Stepper_Motor_Y_Initialize_Dir = HIGH;
-const uint8_t Stepper_Motor_Y_Work_Dir = LOW;
-const uint32_t Stepper_Motor_Y_Loop_Times = 0;
-const uint32_t Stepper_Motor_Y_HIGH_Dealyms = 800;
-const uint32_t Stepper_Motor_Y_LOW_Dealyms = 800;
-// Z Group
-const uint8_t Stepper_Motor_Z_Initialize_Dir = HIGH;
-const uint8_t Stepper_Motor_Z_Work_Dir = LOW;
-const uint32_t Stepper_Motor_Z_Loop_Times = 0;
-const uint32_t Stepper_Motor_Z_HIGH_Dealyms = 800;
-const uint32_t Stepper_Motor_Z_LOW_Dealyms = 800;
-// E0 Group
-const uint8_t Stepper_Motor_E0_Initialize_Dir = HIGH;
-const uint8_t Stepper_Motor_E0_Work_Dir = LOW;
-const uint32_t Stepper_Motor_E0_Loop_Times = 0;
-const uint32_t Stepper_Motor_E0_HIGH_Dealyms = 800;
-const uint32_t Stepper_Motor_E0_LOW_Dealyms = 800;
-// E1 Group
-const uint8_t Stepper_Motor_E1_Initialize_Dir = HIGH;
-const uint8_t Stepper_Motor_E1_Work_Dir = LOW;
-const uint32_t Stepper_Motor_E1_Loop_Times = 0;
-const uint32_t Stepper_Motor_E1_HIGH_Dealyms = 800;
-const uint32_t Stepper_Motor_E1_LOW_Dealyms = 800;
+const uint8_t Stepper_Motor_Initialize_Dir = HIGH;
+const uint8_t Stepper_Motor_Work_Dir = LOW;
+const uint8_t Stepper_Motor_Freq = 74;  // 74Hz 
+const uint8_t Stepper_Motor_Channel = 0;
+const uint8_t Stepper_Motor_resolution = 8;
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
-
-
-    // Button
-    pinMode(Pin_Button, INPUT_PULLUP);
-    // Limited Switch
-    pinMode(Pin_Limited_Switch_1, INPUT_PULLUP);
-    pinMode(Pin_Limited_Switch_2, INPUT_PULLUP);
-    pinMode(Pin_Limited_Switch_3, INPUT_PULLUP);
     // X Group
-    pinMode(Pin_Stepper_Motor_X_En, OUTPUT);
-    pinMode(Pin_Stepper_Motor_X_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Motor_X_Step, OUTPUT);
-    // Y Group
-    pinMode(Pin_Stepper_Motor_Y_En, OUTPUT);
-    pinMode(Pin_Stepper_Motor_Y_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Motor_Y_Step, OUTPUT);
-    // Z Group
-    pinMode(Pin_Stepper_Motor_Z_En, OUTPUT);
-    pinMode(Pin_Stepper_Motor_Z_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Motor_Z_Step, OUTPUT);
-    // E0 Group
-    pinMode(Pin_Stepper_Motor_E0_En, OUTPUT);
-    pinMode(Pin_Stepper_Motor_E0_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Motor_E0_Step, OUTPUT);
-    // E1 Group
-    pinMode(Pin_Stepper_Motor_E1_En, OUTPUT);
-    pinMode(Pin_Stepper_Motor_E1_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Motor_E1_Step, OUTPUT);
-    // Limited Switch Pin.
-    pinMode(Pin_Limited_Switch_1, INPUT_PULLUP);
-    pinMode(Pin_Limited_Switch_2, INPUT_PULLUP);
-    pinMode(Pin_Limited_Switch_3, INPUT_PULLUP);
+    pinMode(Pin_Stepper_Motor_En, OUTPUT);
+    digitalWrite(Pin_Stepper_Motor_En, LOW);
+    pinMode(Pin_Stepper_Motor_Dir, OUTPUT);
+    pinMode(Pin_Stepper_Motor_Step, OUTPUT);
 }
