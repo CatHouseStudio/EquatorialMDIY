@@ -33,7 +33,6 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer_Start);
-
 }
 void task_AsyncWebServer_Start(void *parameters)
 {
@@ -48,6 +47,7 @@ void task_AsyncWebServer_Start(void *parameters)
     for (;;)
     {
         ElegantOTA.loop();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
