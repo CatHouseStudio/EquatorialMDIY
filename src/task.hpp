@@ -40,14 +40,14 @@ void task_Create(void)
         "Serial0 Output",
         configMINIMAL_STACK_SIZE,
         NULL,
-        configMAX_PRIORITIES - 4,
+        configMAX_PRIORITIES - 3,
         &xTaskHandle_Serial0Output);
     xTaskCreate(
         task_AsyncWebServer_Start,
         "AsyncWebServer Start",
         configMINIMAL_STACK_SIZE + 256, // need to calculate the size of the task
         NULL,
-        configMAX_PRIORITIES - 3,
+        configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer_Start);
 
     if (xTaskHandle_StepperMotor_Init != NULL)
@@ -63,7 +63,7 @@ void task_Create(void)
 }
 void task_AsyncWebServer_Start(void *parameters)
 {
-    WiFi_AP_STA_Init();
+    WiFi_AP_Init();
     WebServerEvent();
     ElegantOTA.begin(&server); // Start ElegantOTA
     // ElegantOTA callbacks
