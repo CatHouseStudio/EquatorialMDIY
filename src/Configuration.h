@@ -65,9 +65,9 @@
 // Set the Stepper Motors' PIN.
 // X Group
 // TODO you must change the pin value
-const uint8_t Pin_Stepper_Motor_En = -1;
-const uint8_t Pin_Stepper_Motor_Dir = -1;
-const uint8_t Pin_Stepper_Motor_Step = -1;
+const uint8_t Pin_Stepper_Motor_En = 32;
+const uint8_t Pin_Stepper_Motor_Dir = 33;
+const uint8_t Pin_Stepper_Motor_Step = 25;
 
 // =============================================
 // Set the Serials' Bit rate
