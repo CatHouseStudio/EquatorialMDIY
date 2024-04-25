@@ -81,6 +81,7 @@ const uint8_t Stepper_Motor_Work_Dir = LOW;
 const uint8_t Stepper_Motor_Freq = 74;  // 74Hz 
 const uint8_t Stepper_Motor_Channel = 0;
 const uint8_t Stepper_Motor_resolution = 8;
+const uint8_t Stepper_Motor_dutyCycle=128;
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
