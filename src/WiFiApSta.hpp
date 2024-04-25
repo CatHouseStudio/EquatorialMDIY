@@ -34,4 +34,5 @@ void WiFi_AP_Init()
     strcat(ap_ip, WiFi.localIP().toString().c_str());
     const char *apIP = ap_ip;
     xQueueSend(queueHandle_Serial0, &apIP, (TickType_t)0);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
 }

@@ -153,6 +153,11 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	int t = reqJson["t"];
 	float s = reqJson["s"];
 	//! Write your logic here
+	// TODO: set stepper motor work method
+	digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
+	ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution);
+	ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
+	ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);
 
 	// make resp json object
 	JsonDocument respJson;

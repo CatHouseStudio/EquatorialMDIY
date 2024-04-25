@@ -4,8 +4,6 @@
 #include "WiFiApSta.hpp"
 #include "WebServer.hpp"
 // tasks
-void task_StepperMotor_Init(void *parameters);
-void task_StepperMotor_Work(void *parameters);
 void task_Serial0Output(void *parameter);
 void task_AsyncWebServer_Start(void *parameters);
 // task handle
@@ -22,20 +20,6 @@ void task_Create(void)
 {
     Initialize_Pin();
     xTaskCreate(
-        task_StepperMotor_Init,
-        "StepperMotor Init",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        configMAX_PRIORITIES - 5,
-        &xTaskHandle_StepperMotor_Init);
-    xTaskCreate(
-        task_StepperMotor_Work,
-        "StepperMotor Work",
-        configMINIMAL_STACK_SIZE,
-        NULL,
-        configMAX_PRIORITIES - 5,
-        &xTaskHandle_StepperMotor_Work);
-    xTaskCreate(
         task_Serial0Output,
         "Serial0 Output",
         configMINIMAL_STACK_SIZE,
@@ -50,16 +34,6 @@ void task_Create(void)
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer_Start);
 
-    if (xTaskHandle_StepperMotor_Init != NULL)
-    {
-        // Suspend the Stepper motor
-        vTaskSuspend(xTaskHandle_StepperMotor_Init);
-    }
-    if (xTaskHandle_StepperMotor_Work != NULL)
-    {
-        // Suspend the Stepper motor
-        vTaskSuspend(xTaskHandle_StepperMotor_Work);
-    }
 }
 void task_AsyncWebServer_Start(void *parameters)
 {
@@ -77,24 +51,6 @@ void task_AsyncWebServer_Start(void *parameters)
     }
 }
 
-void task_StepperMotor_Init(void *parameters)
-{
-    for (;;)
-    {
-        digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
-        ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution); 
-        ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);                    
-    }
-}
-void task_StepperMotor_Work(void *parameters)
-{
-    for (;;)
-    {
-        digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Work_Dir);
-        ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution); 
-        ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);  
-    }
-}
 void task_Serial0Output(void *parameter)
 {
     Serial0_Message_Queue_Init();
