@@ -1,6 +1,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
 #include "SerialMessage.hpp"
+#include "WiFiApSta.hpp"
 
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
@@ -110,12 +111,23 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 		return;
 	}
 	// make resp json object
+
+	File statusFile = SPIFFS.open("/status.json", "r");
+	JsonDocument statusJson;
+	DeserializationError error = deserializeJson(statusJson, statusFile);
+	if (error)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	statusFile.close();
+	// Construct the response
 	JsonDocument respJson;
-	respJson["t"] = 999;
+	respJson["t"] = millis() / 1000;
 	JsonObject innerObjectS = respJson["s"].to<JsonObject>();
-	innerObjectS["d"] = 2;
-	innerObjectS["t"] = 444;
-	innerObjectS["s"] = 12.3;
+	innerObjectS["d"] = statusJson["d"];
+	innerObjectS["t"] = statusJson["t"];
+	innerObjectS["s"] = statusJson["s"];
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
@@ -130,11 +142,21 @@ void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
+	File configFile = SPIFFS.open("/config.json", "r");
+	JsonDocument configJson;
+	DeserializationError error = deserializeJson(configJson, configFile);
+	if (error)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	configFile.close();
+
 	// make resp json object
 	JsonDocument respJson;
-	respJson["ssid"] = "SSID";
-	respJson["pwd"] = "PWD";
-	respJson["ratio"] = 123;
+	respJson["ssid"] = configJson["SSID"];
+	respJson["pwd"] = configJson["pwd"];
+	respJson["ratio"] = configJson["ratio"];
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
@@ -152,8 +174,15 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	int d = reqJson["d"];
 	int t = reqJson["t"];
 	float s = reqJson["s"];
+	
+	// Write status to SPIFFS
+	File statusFile = SPIFFS.open("/status.json", "w");
+	serializeJson(reqJson, statusFile);
+	statusFile.close();
+
 	//! Write your logic here
 	// TODO: set stepper motor work method
+
 	digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
 	ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution);
 	ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
@@ -176,11 +205,17 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
-	String ssid = reqJson["ssid"];
-	String pwd = reqJson["pwd"];
+
+	String ap_ssid = reqJson["ssid"];
+	String ap_pwd = reqJson["pwd"];
 	int ratio = reqJson["ratio"];
 	//! Write your logic here
-
+	// Write Config to SPIFFS
+	File configFile = SPIFFS.open("/config.json", "w");
+	serializeJson(reqJson, configFile);
+	configFile.close();
+	//! Warning: never setting ssid as empty string
+	WiFi_AP_Reboot(ap_ssid, ap_pwd);
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
