@@ -104,8 +104,8 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 {
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError error = deserializeJson(reqJson, data);
-	if (error)
+	DeserializationError reqJsonError = deserializeJson(reqJson, data);
+	if (reqJsonError)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
@@ -114,8 +114,8 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 
 	File statusFile = SPIFFS.open("/status.json", "r");
 	JsonDocument statusJson;
-	DeserializationError error = deserializeJson(statusJson, statusFile);
-	if (error)
+	DeserializationError statusFileerror = deserializeJson(statusJson, statusFile);
+	if (statusFileerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
 		return;
@@ -136,16 +136,16 @@ void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 {
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError error = deserializeJson(reqJson, data);
-	if (error)
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
 	File configFile = SPIFFS.open("/config.json", "r");
 	JsonDocument configJson;
-	DeserializationError error = deserializeJson(configJson, configFile);
-	if (error)
+	DeserializationError configFileerror = deserializeJson(configJson, configFile);
+	if (configFileerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
 		return;
@@ -165,8 +165,8 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 {
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError error = deserializeJson(reqJson, data);
-	if (error)
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
@@ -199,8 +199,8 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 {
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError error = deserializeJson(reqJson, data);
-	if (error)
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
