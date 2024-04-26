@@ -1,7 +1,6 @@
 #pragma once
 #include "Configuration.h"
 #include "SerialMessage.hpp"
-#include "WiFiApSta.hpp"
 #include "WebServer.hpp"
 // tasks
 void task_Serial0Output(void *parameter);
