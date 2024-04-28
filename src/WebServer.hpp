@@ -174,7 +174,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	int d = reqJson["d"];
 	int t = reqJson["t"];
 	float s = reqJson["s"];
-	
+
 	// Write status to SPIFFS
 	File statusFile = SPIFFS.open("/status.json", "w");
 	serializeJson(reqJson, statusFile);
@@ -183,10 +183,27 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	//! Write your logic here
 	// TODO: set stepper motor work method
 
-	digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
-	ledcSetup(Stepper_Motor_Channel, Stepper_Motor_Freq, Stepper_Motor_resolution);
-	ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
-	ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);
+	// * I use "d" as direction and "s" as frequency
+
+	switch (d)
+	{
+	case Stepper_Status_Clockwise:
+		digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
+		ledcSetup(Stepper_Motor_Channel, s, Stepper_Motor_resolution);
+		ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
+		break;
+	case Stepper_Status_CounterClockwise:
+		digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Work_Dir);
+		ledcSetup(Stepper_Motor_Channel, s, Stepper_Motor_resolution);
+		ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
+		break;
+	case Stepper_Status_Stop:
+		ledcWrite(Stepper_Motor_Channel, 0); // set duty cycle to zero as stop PWM output
+		break;
+	default:
+		//! What happen?
+		break;
+	}
 
 	// make resp json object
 	JsonDocument respJson;
