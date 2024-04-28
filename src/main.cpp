@@ -1,6 +1,4 @@
-
 #include "task.hpp"
-
 
 void setup()
 {
