@@ -78,10 +78,15 @@ const unsigned long Serial_1_Bit_Rate = 115200;
 // X Group
 const uint8_t Stepper_Motor_Initialize_Dir = HIGH;
 const uint8_t Stepper_Motor_Work_Dir = LOW;
-const uint8_t Stepper_Motor_Freq = 74;  // 74Hz 
+const uint8_t Stepper_Motor_Freq = 74; // 74Hz
 const uint8_t Stepper_Motor_Channel = 0;
 const uint8_t Stepper_Motor_resolution = 8;
-const uint8_t Stepper_Motor_dutyCycle=128;
+const uint8_t Stepper_Motor_dutyCycle = 128;
+
+// * Stepper Motor Status
+const uint8_t Stepper_Status_Clockwise = 0;
+const uint8_t Stepper_Status_CounterClockwise = 1;
+const uint8_t Stepper_Status_Stop = 2;
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
@@ -90,4 +95,6 @@ inline void Initialize_Pin() // This function is used for Initializing
     digitalWrite(Pin_Stepper_Motor_En, LOW);
     pinMode(Pin_Stepper_Motor_Dir, OUTPUT);
     pinMode(Pin_Stepper_Motor_Step, OUTPUT);
+    // Attach the PWM OUTPUT
+    ledcAttachPin(Pin_Stepper_Motor_Step, Stepper_Motor_Channel);
 }
