@@ -1,6 +1,7 @@
 {
     "cmake.configureOnOpen": false,
     "files.associations": {
-        "functional": "cpp"
+        "functional": "cpp",
+        "cmath": "cpp"
     }
 }
