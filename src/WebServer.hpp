@@ -1,7 +1,9 @@
+#pragma once
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
 #include "SerialMessage.hpp"
 #include "WiFiApSta.hpp"
+#include "CelestialPositioning.hpp"
 
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;

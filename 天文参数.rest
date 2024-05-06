@@ -1,0 +1,27 @@
+# 北极星
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Polaris&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 天狼星
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Sirius&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 猎户座腰带 由东向西连成一线（参宿一、参宿二、参宿三）
+# 参宿一
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Alnitak&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 参宿二
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Alnilam&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 参宿三
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Mintaka&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 王良四
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Alpha%20Cas&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 北落师门
+GET https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Fomalhaut&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+# 南门二
+GET https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=Alpha+Centauri&submit=SIMBAD+search
+
+# 老人星
+GET https://simbad.cds.unistra.fr/simbad/sim-basic?Ident=Canopus&submit=SIMBAD
