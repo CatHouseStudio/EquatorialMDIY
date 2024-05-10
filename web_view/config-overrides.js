@@ -6,9 +6,9 @@ const path = require('path');
 
 
 module.exports = function override(config, env) {
-  const cssFilenameTemplate = '[name].[contenthash:8].css';
-  const jsFilenameTemplate = '[name].[contenthash:8].js';
-  const mediaFilenameTemplate = '[name].[contenthash:8].[ext]';
+  const cssFilenameTemplate = '[name].equatorial.css';
+  const jsFilenameTemplate = '[name].equatorial.js';
+  const mediaFilenameTemplate = '[name].equatorial.[ext]';
 
   const plugins = ((config && config.plugins) || []).map((a) => {
     if (a instanceof MiniCssExtractPlugin) {
