@@ -1,3 +1,4 @@
+#pragma once
 #include "SerialMessage.hpp"
 #include <WiFi.h>
 #include <AsyncTCP.h>
@@ -5,11 +6,6 @@ void WiFi_AP_Init();
 void WiFi_AP_Reboot(String ap_ssid, String ap_pwd);
 void WiFi_STA_Init();
 void WiFi_STA_Reboot();
-
-const char *default_sta_ssid = "ssid";
-const char *default_sta_passwd = "password";
-const char *default_ap_ssid = "ESP32-Access-Point";
-const char *default_ap_password = "123456789";
 
 void WiFi_STA_Init()
 {
@@ -38,7 +34,8 @@ void WiFi_AP_Init()
     IPAddress localIP(192, 168, 4, 1);
     IPAddress gateway(192, 168, 4, 1);
     IPAddress subnet(255, 255, 255, 0);
-
+    const char *default_ap_ssid = "ESP32-Access-Point";
+    const char *default_ap_password = "123456789";
     // Read config.json from SPIFFS
     if (SPIFFS.begin(true))
     {

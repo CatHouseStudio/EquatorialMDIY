@@ -1,0 +1,33 @@
+https://simbad.cds.unistra.fr/simbad/sim-id?output.format=ASCII&Ident=%20Polaris&obj.pmsel=off&obj.plxsel=off&obj.rvsel=off&obj.spsel=off&obj.mtsel=off&obj.sizesel=off&obj.fluxsel=off&obj.bibsel=off&obj.messel=off&obj.notesel=off
+
+C.D.S.  -  SIMBAD4 rel 1.8  -  2024.05.04CEST15:50:27
+
+Polaris
+-------
+
+Object * alf UMi  ---  cC*  ---  OID=@317713   (@@125261,0)  ---  coobox=2389
+
+Coordinates(ICRS,ep=J2000,eq=2000): 02 31 49.09456  +89 15 50.7923 (Opt ) A [1.14 0.97 90] 2007A&A...474..653V
+Coordinates(FK4,ep=B1950,eq=1950): 01 48 47.87574  +89 01 43.6298
+Coordinates(Gal,ep=J2000,eq=2000): 123.28054967  +26.46139598 
+hierarchy counts: #parents=0, #children=0, #siblings=0
+
+Identifiers (46):
+   HIP 11767                            TIC 303256075                        NAME Lodestar                      
+   PLX 299                              SBC9 76                              * 1 UMi                            
+   * alf UMi                            AAVSO 0122+88                        ADS 1477 A                         
+   AG+89 4                              BD+88 8                              CCDM J02319+8915A                  
+   CSI+88 8 1                           FK5 907                              GC 2243                            
+   GCRV 1037                            GEN# +1.00008890A                    GSC 04628-00237                    
+   HD 8890                              HIC 11767                            HR 424                             
+   IDS 01226+8846 A                     IRAS 01490+8901                      JP11 498                           
+   N30 381                              NAME Polaris                         PMC 90-93 640                      
+   PPM 431                              ROT 3491                             SAO 308                            
+   SBC7 51                              SKY# 3738                            TD1 835                            
+   TYC 4628-237-1                       UBV 21589                            UBV M 8201                         
+   V* alf UMi                           PLX 299.00                           WDS J02318+8916Aa,Ab               
+   ADS 1477 AP                          ** WRH 39                            WDS J02318+8916A                   
+   ** STF 93A                           2MASS J02314822+8915503              NAME North Star                    
+   WEB 2438                                                                                                     
+================================================================================
+
