@@ -4,7 +4,7 @@
 #include "SerialMessage.hpp"
 #include "WiFiApSta.hpp"
 #include "CelestialPositioning.hpp"
-
+#include "GPSInfo.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
 
@@ -22,7 +22,8 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data); // POST htt
 void onOTAStart()
 {
 	// Log when OTA has started
-	Serial.println("OTA update started!");
+	xQueueSend(queueHandle_Serial0, &"OTA update started!", (TickType_t)0);
+
 	// <Add your own code here>
 }
 
@@ -31,8 +32,10 @@ void onOTAProgress(size_t current, size_t final)
 	// Log every 1 second
 	if (millis() - ota_progress_millis > 1000)
 	{
+		char message[Max_Message_Length];
 		ota_progress_millis = millis();
-		Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+		snprintf(message, Max_Message_Length, "OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+		xQueueSend(queueHandle_Serial0, &message, (TickType_t)0);
 	}
 }
 
@@ -41,11 +44,11 @@ void onOTAEnd(bool success)
 	// Log when OTA has finished
 	if (success)
 	{
-		Serial.println("OTA update finished successfully!");
+		xQueueSend(queueHandle_Serial0, &"OTA update finished successfully!", (TickType_t)0);
 	}
 	else
 	{
-		Serial.println("There was an error during OTA update!");
+		xQueueSend(queueHandle_Serial0, &"There was an error during OTA update!", (TickType_t)0);
 	}
 
 	// <Add your own code here>
@@ -184,6 +187,22 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 
 	//! Write your logic here
 	// TODO: set stepper motor work method
+	/* Calculate azimuth and altitude here
+	 if (xSemaphoreTake(semphr_gps_info_Mutex, portMAX_DELAY) == pdTRUE) {
+		gpsinfo.相关信息
+		// void CalculatePosition(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
+        //                float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
+        //                float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
+        //                float &azimuth, float &altitude);// 方位角和高度角
+		CalculatePosition(相关参数，最后两个参数是方位角和高度角)
+		xSemaphoreGive(semphr_gps_info_Mutex);
+
+		// 生成和发送响应
+		// 例如：sprintf(response, "Latitude: %f, Longitude: %f", lat, lon);
+		// sendResponse(response);
+	}
+
+	*/
 
 	// * I use "d" as direction and "s" as frequency
 

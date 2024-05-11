@@ -13,9 +13,11 @@ const float degToRad = PI / 180.0;
 const float radToDeg = 180.0 / PI;
 float calculateGST(int year, int month, int day, float utcHours);
 void calculateAzimuthAndAltitude(float HA, float Dec, float Latitude, float &Azimuth, float &Altitude);
-void CalculatePosition();
-
-
+// TODO Use this function in WebServer
+void CalculatePosition(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
+                       float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
+                       float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
+                       float &azimuth, float &altitude);// 方位角和高度角
 // 计算GST
 float calculateGST(int year, int month, int day, float utcHours)
 {
@@ -50,38 +52,28 @@ void calculateAzimuthAndAltitude(float HA, float Dec, float Latitude, float &Azi
     }
 }
 
-void CalculatePosition()
+void CalculatePosition(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
+                       float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
+                       float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
+                       float &azimuth, float &altitude)
 {
 
     // UTC 时间
     // https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
-    initTime("CST-8"); // Set for Asia/Shanghai
-    struct tm timeinfo;
-    getLocalTime(&timeinfo);
+    // initTime("CST-8"); // Set for Asia/Shanghai
+    // struct tm timeinfo;
+    // getLocalTime(&timeinfo);
 
     // float utcHours = 21 + 34.0 / 60 + 56.0 / 3600;
-    float utcHours = timeinfo.tm_hour + (timeinfo.tm_min * 1.0) / 60 + (timeinfo.tm_sec * 1.0) / 3600;
-
-    // 赤经和赤纬
-    // get from api
-    float raHours = 2 + 58.0 / 60;     // 北极星的赤经
-    float decDegrees = 89 + 15.0 / 60; // 北极星的赤纬
-    // 地理位置
-    // get from gps
-    float longitude = 121.93; // 经度
-    float latitude = 30.9;    // 纬度
+    //! Warning The time zone must be Asia/Shanghai(UTC+8)
+    float utcHours = hour + (minute * 1.0) / 60 + (second * 1.0) / 3600;
 
     // 计算GST和LST
-    float gst = calculateGST(timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, utcHours);
+    float gst = calculateGST(year, month, day, utcHours);
     float lst = fmod(gst + longitude / 15.0, 24.0);
     float ha = fmod(lst * 15 - raHours * 15, 360); // 时角，单位转为度
     if (ha < 0)
         ha += 360;
 
-    float azimuth, altitude;
     calculateAzimuthAndAltitude(ha, decDegrees, latitude, azimuth, altitude);
-    // Serial.print("方位角: ");
-    // Serial.println(azimuth);
-    // Serial.print("高度角: ");
-    // Serial.println(altitude);
 }
