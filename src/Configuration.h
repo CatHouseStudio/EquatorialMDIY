@@ -72,7 +72,10 @@ const uint8_t Pin_Stepper_Motor_Step = 25;
 // =============================================
 // Set the Serials' Bit rate
 const unsigned long Serial_0_Bit_Rate = 115200;
-const unsigned long Serial_1_Bit_Rate = 115200;
+// This Serial2 for GPS Module
+const uint8_t Pin_Serial_GPS_RX=16;
+const uint8_t Pin_Serial_GPS_TX=17;
+const unsigned long Serial_GPS_Bit_Rate = 4800;
 
 // Set the Stepper Motors' Parameter.
 // X Group
