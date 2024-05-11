@@ -2,14 +2,18 @@
 #include "Configuration.h"
 #include "SerialMessage.hpp"
 #include "WebServer.hpp"
+
+
 // tasks
 void task_Serial0Output(void *parameter);
-void task_AsyncWebServer_Start(void *parameters);
+void task_AsyncWebServer(void *parameters);
+
 // task handle
-static TaskHandle_t xTaskHandle_StepperMotor_Init;
-static TaskHandle_t xTaskHandle_StepperMotor_Work;
 static TaskHandle_t xTaskHandle_Serial0Output;
-static TaskHandle_t xTaskHandle_AsyncWebServer_Start;
+static TaskHandle_t xTaskHandle_AsyncWebServer;
+static TaskHandle_t xTaskHandle_GPSInfo;
+
+
 
 // task create
 void task_Create(void);
@@ -26,14 +30,21 @@ void task_Create(void)
         configMAX_PRIORITIES - 3,
         &xTaskHandle_Serial0Output);
     xTaskCreate(
-        task_AsyncWebServer_Start,
+        task_AsyncWebServer,
         "AsyncWebServer Start",
         configMINIMAL_STACK_SIZE + 40960, // need to calculate the size of the task
         NULL,
         configMAX_PRIORITIES - 4,
-        &xTaskHandle_AsyncWebServer_Start);
+        &xTaskHandle_AsyncWebServer);
+    xTaskCreate(
+        task_GPSInfo,
+        "GPSInfo",
+        configMINIMAL_STACK_SIZE + 8192,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        &xTaskHandle_GPSInfo);
 }
-void task_AsyncWebServer_Start(void *parameters)
+void task_AsyncWebServer(void *parameters)
 {
     WiFi_AP_Init();
     WebServerEvent();
@@ -66,3 +77,4 @@ void task_Serial0Output(void *parameter)
         // vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
+
