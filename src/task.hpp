@@ -57,7 +57,7 @@ void task_AsyncWebServer(void *parameters)
     for (;;)
     {
         ElegantOTA.loop();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
 
@@ -74,7 +74,7 @@ void task_Serial0Output(void *parameter)
                 Serial.println(readBuffer);
             }
         }
-        // vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 

@@ -5,6 +5,7 @@
 #include "WiFiApSta.hpp"
 #include "CelestialPositioning.hpp"
 #include "GPSInfo.hpp"
+#include "CelestialStepper.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
 
@@ -73,6 +74,7 @@ void WebServerEvent()
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
+	//! you must set the right name 
 	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
 	server.on("/main.b11ab86c.js", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -208,18 +210,18 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 
 	switch (d)
 	{
-	case Stepper_Status_Clockwise:
-		digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Initialize_Dir);
-		ledcSetup(Stepper_Motor_Channel, s, Stepper_Motor_resolution);
-		ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
+	case Stepper_Equator_Status_Clockwise:
+		digitalWrite(Pin_Stepper_Equator_Dir, Stepper_Equator_Initialize_Dir);
+		ledcSetup(Stepper_Equator_Channel, s, Stepper_Equator_resolution);
+		ledcWrite(Stepper_Equator_Channel, Stepper_Equator_dutyCycle);
 		break;
-	case Stepper_Status_CounterClockwise:
-		digitalWrite(Pin_Stepper_Motor_Dir, Stepper_Motor_Work_Dir);
-		ledcSetup(Stepper_Motor_Channel, s, Stepper_Motor_resolution);
-		ledcWrite(Stepper_Motor_Channel, Stepper_Motor_dutyCycle);
+	case Stepper_Equator_Status_CounterClockwise:
+		digitalWrite(Pin_Stepper_Equator_Dir, Stepper_Equator_Work_Dir);
+		ledcSetup(Stepper_Equator_Channel, s, Stepper_Equator_resolution);
+		ledcWrite(Stepper_Equator_Channel, Stepper_Equator_dutyCycle);
 		break;
-	case Stepper_Status_Stop:
-		ledcWrite(Stepper_Motor_Channel, 0); // set duty cycle to zero as stop PWM output
+	case Stepper_Equator_Status_Stop:
+		ledcWrite(Stepper_Equator_Channel, 0); // set duty cycle to zero as stop PWM output
 		break;
 	default:
 		//! What happen?

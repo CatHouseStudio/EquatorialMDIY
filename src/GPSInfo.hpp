@@ -81,6 +81,6 @@ void task_GPSInfo(void *parameter)
                 }
             }
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(pdMS_TO_TICKS(3000));
     }
 }
