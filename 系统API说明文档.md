@@ -20,9 +20,9 @@
 | `/get_gps`        | `GET`  | 获取当前设备位置信息 |                                          |
 | `/set_status`     | `POST` | 设置当前设备工作状态 |                                          |
 | `/set_status`     | `POST` | 设置当前设备网络状态 |                                          |
-| `/set_time`       | `POST` | 设置当前设备时间信息 |                                          |
-| `/set_gps`        | `POST` | 设置当前设备位置信息 |                                          |
-| `/get_coordinate` | `GET`  | 获取当前设备坐标信息 | 仅在双电机的寻星仪上可使用               |
+| `/set_time`       | `POST` | 设置当前设备时间信息 | 若数据来源为gps模块，则可以删去此api     |
+| `/set_gps`        | `POST` | 设置当前设备位置信息 | 若数据来源为gps模块，则可以删去此api     |
+| `/get_coordinate` | `GET`  | 获取当前设备坐标信息 | 仅在双电机的寻星仪上可使用（电机坐标）   |
 | `/move_relative`  | `POST` | 当前坐标另转动偏移量 | 仅在双电机的寻星仪上可使用(需要调用两次) |
 | `/move_absolute`  | `POST` | 原点坐标转至绝对位置 | 仅在双电机的寻星仪上可使用(需要调用两次) |
 
@@ -248,6 +248,6 @@
 ### 更新内容：
 
 - 增加了 `/set_status`、`/set_config`、`/set_time` 和 `/set_gps` 的 POST 请求示例。
-- 增加了`/get_coordinate`、`/move_relative`和 `/move_absolute`的相关接口示例
+- 增加了 `/get_coordinate`、`/move_relative`和 `/move_absolute`的相关接口示例
 
 如果还有其他需求或接口说明，请随时调整和完善。

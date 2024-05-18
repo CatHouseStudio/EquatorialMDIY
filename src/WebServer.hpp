@@ -15,10 +15,12 @@ void onOTAEnd(bool success);
 
 void WebServerEvent();
 // Server API events
-void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/status
-void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/config
-void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_status
-void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_config
+void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/status
+void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/config
+void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/set_status
+void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/set_config
+void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/move_relative
+void handleMoveAbsolute(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/move_absolute
 
 void onOTAStart()
 {
@@ -74,7 +76,7 @@ void WebServerEvent()
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
-	//! you must set the right name 
+	//! you must set the right name
 	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
 	server.on("/main.b11ab86c.js", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -83,6 +85,25 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
+	// Get Stepper Coordinate(azimuth and altitude) from SPIFFS
+	server.on("/get_coordinate", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { File coordinateFile = SPIFFS.open("/Coordinate.json", "r");
+	JsonDocument coordinateJson;
+	DeserializationError coordinateFileerror = deserializeJson(coordinateJson, coordinateFile);
+	if (coordinateFileerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	coordinateFile.close();
+
+	// make resp json object
+	JsonDocument respJson;
+	respJson["azimuth"] = coordinateJson["azimuth"];
+	respJson["altitude"] = coordinateJson["altitude"];
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response); });
 
 	// Server api
 	// server.on("/buzz", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -101,7 +122,11 @@ void WebServerEvent()
                 handleSetStatus(request,data);
             }else if(request->url()=="/set_config"){
                 handleSetStatus(request,data);
-            }
+            }else if(request->url()=="/move_relative"){
+				handleMoveRelative(request,data);
+			}else if(request->url()=="/move_absolute"){
+				handleMoveAbsolute(request,data);
+			}
             else{
                 request->send(500);
             }
@@ -193,9 +218,9 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	 if (xSemaphoreTake(semphr_gps_info_Mutex, portMAX_DELAY) == pdTRUE) {
 		gpsinfo.相关信息
 		// void CalculatePosition(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
-        //                float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
-        //                float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
-        //                float &azimuth, float &altitude);// 方位角和高度角
+		//                float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
+		//                float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
+		//                float &azimuth, float &altitude);// 方位角和高度角
 		CalculatePosition(相关参数，最后两个参数是方位角和高度角)
 		xSemaphoreGive(semphr_gps_info_Mutex);
 
@@ -206,8 +231,17 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 
 	*/
 
-	// * I use "d" as direction and "s" as frequency
+	// set coordinate content to 0.0 and 0.0
+	File coordinateFile = SPIFFS.open("/Coordinate.json", "w");
+	JsonDocument coordinateJson;
+	coordinateJson["azimuth"] = 0.0;
+	coordinateJson["altitude"] = 0.0;
+	serializeJson(coordinateJson, coordinateFile);
+	coordinateFile.close();
 
+	// * I use "d" as direction and "s" as frequency
+	// Attach the PWM OUTPUT
+	ledcAttachPin(Pin_Stepper_Equator_Step, Stepper_Equator_Channel);
 	switch (d)
 	{
 	case Stepper_Equator_Status_Clockwise:
@@ -221,6 +255,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 		ledcWrite(Stepper_Equator_Channel, Stepper_Equator_dutyCycle);
 		break;
 	case Stepper_Equator_Status_Stop:
+		ledcDetachPin(Pin_Stepper_Equator_Step);
 		ledcWrite(Stepper_Equator_Channel, 0); // set duty cycle to zero as stop PWM output
 		break;
 	default:
@@ -256,6 +291,132 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	configFile.close();
 	//! Warning: never setting ssid as empty string
 	WiFi_AP_Reboot(ap_ssid, ap_pwd);
+	// make resp json object
+	JsonDocument respJson;
+	respJson["status"] = "OK";
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+
+void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/move_relative
+{
+
+	// make sure Celestial Stepper is IDLE
+	if ((xTaskHandle_Move_Horizontal != NULL && eTaskGetState(xTaskHandle_Move_Horizontal) != eDeleted) ||
+		(xTaskHandle_Move_Vertical != NULL && eTaskGetState(xTaskHandle_Move_Vertical) != eDeleted))
+	{
+		// make resp json object
+		JsonDocument notIDLEJson;
+		notIDLEJson["status"] = "Celestial Stepper is Working!";
+		String response;
+		serializeJson(notIDLEJson, response);
+		request->send(200, "application/json", response);
+	}
+
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON");
+		return;
+	}
+	float req_azimuth = reqJson["azimuth"];
+	float req_altitude = reqJson["altitude"];
+
+	File coordinateFileR = SPIFFS.open("/Coordinate.json", "r");
+	JsonDocument coordinateRJson;
+	DeserializationError coordinateFileRerror = deserializeJson(coordinateRJson, coordinateFileR);
+	if (coordinateFileRerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	coordinateFileR.close();
+
+	// float az = coordinateRJson["azimuth"].as<float>();
+	// float azimuth = az + req_azimuth;
+
+	// float al = coordinateRJson["altitude"].as<float>();
+	// float altitude = al + req_altitude;
+	// Write new coordinate to SPIFFS
+	File coordinateFileW = SPIFFS.open("/Coordinate.json", "w");
+	JsonDocument coordinateWJson;
+	coordinateWJson["azimuth"] = req_azimuth;
+	coordinateWJson["altitude"] = req_altitude;
+	serializeJson(coordinateWJson, coordinateFileW);
+	coordinateFileW.close();
+
+	// Call CelestialStepper
+	ledcDetachPin(Pin_Stepper_Equator_Step);
+	int64_t pluse_hor = Pluse_Horizontal(req_azimuth);
+	int64_t pluse_vec = Pluse_Vertical(req_altitude);
+
+	xTaskCreate(task_Move_Horizontal, "Move Horizontal", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_hor, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Horizontal);
+	xTaskCreate(task_Move_Vertical, "Move Vertical", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_vec, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Vertical);
+
+	// make resp json object
+	JsonDocument respJson;
+	respJson["status"] = "OK";
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleMoveAbsolute(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/move_absolute
+{
+	// make sure Celestial Stepper is IDLE
+	if ((xTaskHandle_Move_Horizontal != NULL && eTaskGetState(xTaskHandle_Move_Horizontal) != eDeleted) ||
+		(xTaskHandle_Move_Vertical != NULL && eTaskGetState(xTaskHandle_Move_Vertical) != eDeleted))
+	{
+		// make resp json object
+		JsonDocument notIDLEJson;
+		notIDLEJson["status"] = "Celestial Stepper is Working!";
+		String response;
+		serializeJson(notIDLEJson, response);
+		request->send(200, "application/json", response);
+	}
+
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON");
+		return;
+	}
+	float req_azimuth = reqJson["azimuth"];
+	float req_altitude = reqJson["altitude"];
+
+	File coordinateFileR = SPIFFS.open("/Coordinate.json", "r");
+	JsonDocument coordinateRJson;
+	DeserializationError coordinateFileRerror = deserializeJson(coordinateRJson, coordinateFileR);
+	if (coordinateFileRerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	coordinateFileR.close();
+
+	float az = coordinateRJson["azimuth"].as<float>();
+	float azimuth = req_azimuth - az;
+
+	float al = coordinateRJson["altitude"].as<float>();
+	float altitude = req_altitude - al;
+	// Write new coordinate to SPIFFS
+	File coordinateFileW = SPIFFS.open("/Coordinate.json", "w");
+	JsonDocument coordinateWJson;
+	coordinateWJson["azimuth"] = azimuth;
+	coordinateWJson["altitude"] = altitude;
+	serializeJson(coordinateWJson, coordinateFileW);
+	coordinateFileW.close();
+
+	// Call CelestialStepper
+	ledcDetachPin(Pin_Stepper_Equator_Step);
+	int64_t pluse_hor = Pluse_Horizontal(azimuth);
+	int64_t pluse_vec = Pluse_Vertical(altitude);
+
+	xTaskCreate(task_Move_Horizontal, "Move Horizontal", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_hor, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Horizontal);
+	xTaskCreate(task_Move_Vertical, "Move Vertical", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_vec, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Vertical);
+
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
