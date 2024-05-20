@@ -19,7 +19,7 @@
 | `/get_time`       | `GET`  | 获取当前设备时间信息 |                                          |
 | `/get_gps`        | `GET`  | 获取当前设备位置信息 |                                          |
 | `/set_status`     | `POST` | 设置当前设备工作状态 |                                          |
-| `/set_status`     | `POST` | 设置当前设备网络状态 |                                          |
+| `/set_config`     | `POST` | 设置当前设备网络状态 |                                          |
 | `/set_time`       | `POST` | 设置当前设备时间信息 | 若数据来源为gps模块，则可以删去此api     |
 | `/set_gps`        | `POST` | 设置当前设备位置信息 | 若数据来源为gps模块，则可以删去此api     |
 | `/get_coordinate` | `GET`  | 获取当前设备坐标信息 | 仅在双电机的寻星仪上可使用（电机坐标）   |
