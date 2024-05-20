@@ -119,6 +119,5 @@ inline void Initialize_Pin() // This function is used for Initializing
     pinMode(Pin_Stepper_Horizontal_Step, OUTPUT);
     pinMode(Pin_Stepper_Vertical_Dir, OUTPUT);
     pinMode(Pin_Stepper_Vertical_Step, OUTPUT);
-    // Attach the PWM OUTPUT
-    ledcAttachPin(Pin_Stepper_Equator_Step, Stepper_Equator_Channel);
+
 }
