@@ -10,7 +10,7 @@
 * 电源
 * 若干电线
 
-## [使用方式](https://github.com/facebook/react/blob/main/README.md#使用方式)
+## [使用方式](https://github.com/CatHouseStudio/EquatorialMDIY/blob/main/README.md#使用方式)
 
 1. 安装vscode
 2. 安装[PlatformIO IDE](https://platformio.org)扩展
@@ -18,7 +18,7 @@
 4. 编译并烧录固件至ESP32开发板上
 5. 连接电路并安装机械结构
 
-## 相关说明
+## [相关说明](https://github.com/CatHouseStudio/EquatorialMDIY/blob/main/README.md#相关说明)
 
 * 本项目采用了Freertos
 * [web_view](https://github.com/CatHouseStudio/EquatorialMDIY/tree/main/web_view)目录中为该项目的react前端代码
