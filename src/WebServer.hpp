@@ -79,8 +79,6 @@ void WebServerEvent()
 	//! you must set the right name
 	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
-	server.on("/main.b11ab86c.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.b11ab86c.js", "application/javascript"); });
 	server.on("/main.c051389f.js", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -144,7 +142,7 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	}
 	// make resp json object
 
-	File statusFile = SPIFFS.open("/status.json", "r");
+	File statusFile = SPIFFS.open("/Status.json", "r");
 	JsonDocument statusJson;
 	DeserializationError statusFileerror = deserializeJson(statusJson, statusFile);
 	if (statusFileerror)
@@ -174,7 +172,7 @@ void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
-	File configFile = SPIFFS.open("/config.json", "r");
+	File configFile = SPIFFS.open("/Config.json", "r");
 	JsonDocument configJson;
 	DeserializationError configFileerror = deserializeJson(configJson, configFile);
 	if (configFileerror)
@@ -208,7 +206,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	float s = reqJson["s"];
 
 	// Write status to SPIFFS
-	File statusFile = SPIFFS.open("/status.json", "w");
+	File statusFile = SPIFFS.open("/Status.json", "w");
 	serializeJson(reqJson, statusFile);
 	statusFile.close();
 
@@ -286,7 +284,7 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	int ratio = reqJson["ratio"];
 	//! Write your logic here
 	// Write Config to SPIFFS
-	File configFile = SPIFFS.open("/config.json", "w");
+	File configFile = SPIFFS.open("/Config.json", "w");
 	serializeJson(reqJson, configFile);
 	configFile.close();
 	//! Warning: never setting ssid as empty string
