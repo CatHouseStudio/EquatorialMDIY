@@ -1,0 +1,38 @@
+{
+    "Polaris": {
+        "raHours": "02 31 49.09456",
+        "decDegrees": "+89 15 50.7923"
+    },
+    "Sirius": {
+        "raHours": "06 45 08.91728",
+        "decDegrees": "-16 42 58.0171"
+    },
+    "Alnitak": {
+        "raHours": "05 40 45.52666",
+        "decDegrees": "-01 56 33.2649"
+    },
+    "Alnilam": {
+        "raHours": "05 36 12.81335",
+        "decDegrees": "-01 12 06.9089"
+    },
+    "Mintaka": {
+        "raHours": "05 32 00.40009",
+        "decDegrees": "-00 17 56.7424"
+    },
+    "Alpha Cas": {
+        "raHours": "00 40 30.4430418459",
+        "decDegrees": "+56 32 14.385181354"
+    },
+    "Fomalhaut": {
+        "raHours": "22 57 39.04625",
+        "decDegrees": "-29 37 20.0533"
+    },
+    "Alpha Centauri": {
+        "raHours": "14 39 40.4",
+        "decDegrees": "-60 50 20"
+    },
+    "Canopus": {
+        "raHours": "06 23 57.10988",
+        "decDegrees": "-52 41 44.3810"
+    }
+}
