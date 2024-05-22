@@ -77,10 +77,10 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
 	//! you must set the right name
-	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
-	server.on("/main.c051389f.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
+	server.on("/main.equatorial.css", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/main.equatorial.css", "text/css"); });
+	server.on("/main.equatorial.js", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/main.equatorial.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
 	// Get Stepper Coordinate(azimuth and altitude) from SPIFFS

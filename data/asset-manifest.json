@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/main.equatorial.css",
+    "main.js": "/main.equatorial.js",
+    "index.html": "/index.html"
+  },
+  "entrypoints": [
+    "main.equatorial.css",
+    "main.equatorial.js"
+  ]
+}
