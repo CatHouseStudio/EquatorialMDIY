@@ -77,32 +77,42 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
 	//! you must set the right name
-	server.on("/main.98185c89.css", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.98185c89.css", "text/css"); });
-	server.on("/main.c051389f.js", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { request->send(SPIFFS, "/main.c051389f.js", "application/javascript"); });
+	server.on("/main.equatorial.css", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/main.equatorial.css", "text/css"); });
+	server.on("/main.equatorial.js", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { request->send(SPIFFS, "/main.equatorial.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
 	// Get Stepper Coordinate(azimuth and altitude) from SPIFFS
 	server.on("/get_coordinate", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { File coordinateFile = SPIFFS.open("/Coordinate.json", "r");
-	JsonDocument coordinateJson;
-	DeserializationError coordinateFileerror = deserializeJson(coordinateJson, coordinateFile);
-	if (coordinateFileerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-		return;
-	}
-	coordinateFile.close();
+				JsonDocument coordinateJson;
+				DeserializationError coordinateFileerror = deserializeJson(coordinateJson, coordinateFile);
+				if (coordinateFileerror)
+					{
+						request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+						return;
+					}
+				coordinateFile.close();
 
-	// make resp json object
-	JsonDocument respJson;
-	respJson["azimuth"] = coordinateJson["azimuth"];
-	respJson["altitude"] = coordinateJson["altitude"];
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response); });
+				// make resp json object
+				JsonDocument respJson;
+				respJson["azimuth"] = coordinateJson["azimuth"];
+				respJson["altitude"] = coordinateJson["altitude"];
+				String response;
+				serializeJson(respJson, response);
+				request->send(200, "application/json", response); });
 
+	server.on("/get_EfuseMac", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { 
+				uint64_t chipId =ESP.getEfuseMac();
+				char chipIdStr[17]; 
+    			sprintf(chipIdStr, "%012llX", chipId); 
+				JsonDocument respJson; 
+				respJson["EfuseMac"]=chipIdStr; 
+				String response;
+				serializeJson(respJson, response);
+				request->send(200, "application/json", response); });
 	// Server api
 	// server.on("/buzz", HTTP_GET, [](AsyncWebServerRequest *request)
 	//           { request->send(200, "application/json", "{\"message\":\"Buzz play Little Star\"}");
