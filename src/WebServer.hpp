@@ -155,9 +155,7 @@ void WebServerEvent()
 	// Get Status
 	server.on("/get_status", HTTP_GET, [](AsyncWebServerRequest *request)
 			  {
-
 	// make resp json object
-
 	File statusFile = SPIFFS.open("/Status.json", "r");
 	JsonDocument statusJson;
 	DeserializationError statusFileerror = deserializeJson(statusJson, statusFile);
@@ -176,7 +174,18 @@ void WebServerEvent()
 	innerObjectS["s"] = statusJson["s"];
 	String response;
 	serializeJson(respJson, response);
-	request->send(200, "application/json", response); });
+				request->send(200, "application/json", response); });
+	// Get EfuseMac
+	server.on("/get_EfuseMac", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { 
+				uint64_t chipId =ESP.getEfuseMac();
+				char chipIdStr[17]; 
+    			sprintf(chipIdStr, "%012llX", chipId); 
+				JsonDocument respJson; 
+				respJson["EfuseMac"]=chipIdStr; 
+				String response;
+				serializeJson(respJson, response);
+				request->send(200, "application/json", response); });
 	// POST API
 	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 						 {
