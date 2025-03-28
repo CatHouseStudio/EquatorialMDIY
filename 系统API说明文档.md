@@ -289,6 +289,7 @@
 * v1.0.0:初始版本，包含基础接口 `/get_status`、`/get_config`、`/get_time` 和 `/get_gps`以及 `/set_status`、`/set_config`、`/set_time` 和 `/set_gps`。
 * v1.0.1：新增 `/get_coordinate`、`/move_relative`和 `/move_absolute`三个接口
 * v1.0.2：更新了 `/move_relative`和 `/move_absolute`两个接口调用时电机忙碌状态下的返回json
+* v1.0.3：新增了 `/get_EfuseMac`接口，用于获得esp32设备的唯一id。
 * v1.1.0：新增了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`四个接口。删除了 `/get_coordinate`、`/move_relative`和 `/move_absolute`。
 
 ### 更新内容：
@@ -296,6 +297,7 @@
 - 增加了 `/set_status`、`/set_config`、`/set_time` 和 `/set_gps` 的 POST 请求示例。
 - 增加了 `/get_coordinate`、`/move_relative`和 `/move_absolute`的相关接口示例
 - 更新了 `/move_relative`和 `/move_absolute`的相关接口示例
+- 增加了 `/get_EfuseMac`接口的请求示例
 - 更新了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`的相关接口示例
 
 如果还有其他需求或接口说明，请随时调整和完善。
