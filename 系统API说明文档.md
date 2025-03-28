@@ -12,19 +12,20 @@
 
 ## API 接口一览
 
-| 接口                | 请求方法 | 描述                 | 备注                                     |
-| ------------------- | -------- | -------------------- | ---------------------------------------- |
-| `/get_status`     | `GET`  | 获取当前设备工作状态 |                                          |
-| `/get_config`     | `GET`  | 获取当前设备网络状态 |                                          |
-| `/get_time`       | `GET`  | 获取当前设备时间信息 |                                          |
-| `/get_gps`        | `GET`  | 获取当前设备位置信息 |                                          |
-| `/set_status`     | `POST` | 设置当前设备工作状态 |                                          |
-| `/set_config`     | `POST` | 设置当前设备网络状态 |                                          |
-| `/set_time`       | `POST` | 设置当前设备时间信息 | 若数据来源为gps模块，则可以删去此api     |
-| `/set_gps`        | `POST` | 设置当前设备位置信息 | 若数据来源为gps模块，则可以删去此api     |
-| `/get_coordinate` | `GET`  | 获取当前设备坐标信息 | 仅在双电机的寻星仪上可使用（电机坐标）   |
-| `/move_relative`  | `POST` | 当前坐标另转动偏移量 | 仅在双电机的寻星仪上可使用(需要调用两次) |
-| `/move_absolute`  | `POST` | 原点坐标转至绝对位置 | 仅在双电机的寻星仪上可使用(需要调用两次) |
+| 接口                | 请求方法 | 描述                                       | 备注                                 |
+| ------------------- | -------- | ------------------------------------------ | ------------------------------------ |
+| `/get_status`       | `GET`    | 获取当前设备工作状态                       |                                      |
+| `/get_config`       | `GET`    | 获取当前设备网络状态                       |                                      |
+| `/get_time`         | `GET`    | 获取当前设备时间信息                       |                                      |
+| `/get_gps`          | `GET`    | 获取当前设备位置信息                       |                                      |
+| `/set_status`       | `POST`   | 设置当前设备工作状态                       |                                      |
+| `/set_config`       | `POST`   | 设置当前设备网络状态                       |                                      |
+| `/set_time`         | `POST`   | 设置当前设备时间信息                       | 若数据来源为gps模块，则可以删去此api |
+| `/set_gps`          | `POST`   | 设置当前设备位置信息                       | 若数据来源为gps模块，则可以删去此api |
+| `/get_RA_DEC_Float` | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                      |
+| `/get_RA_DEC_HDMS`  | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                      |
+| `/set_RA_DEC_Float` | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。浮点格式 |                                      |
+| `/set_RA_DEC_HDMS`  | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                      |
 
 ## 接口详细说明
 
@@ -67,7 +68,7 @@
 ```json
 {
     "year":2024,    // 2024年
-    "month":4,      // 5月（根据POSIX.1-2008标准，从0开始计数，即0表示1月）
+    "month":5,      // 5月
     "day":10,       // 10日
     "hour":20,      // 20时
     "minute":30,    // 30分
@@ -140,7 +141,7 @@
 ```json
 {
     "year":2024,    // 2024年
-    "month":4,      // 5月（根据POSIX.1-2008标准，从0开始计数，即0表示1月）
+    "month":5,      // 5月
     "day":10,       // 10日
     "hour":20,      // 20时
     "minute":30,    // 30分
@@ -177,30 +178,52 @@
 }
 ```
 
-### `/get_coordinate`
+### `/get_RA_DEC_Float`
 
 - **方法：** `GET`
-- **描述：** 获取当前 ESP32 设备的坐标信息。
+- **描述：** 获取当前跟踪星体的赤经和赤纬信息。浮点格式
 - **请求参数：** 无
 - **响应：**
 
 ```json
 {
-    "azimuth":5.37,    // 方位角
-    "altitude":30.21   // 高度角
+
+    "ra":13.25,    // 赤经
+    "dec":45.75   // 赤纬
 }
 ```
 
-### ``/move_relative``
+### `/get_RA_DEC_HDMS`
+
+- **方法：** `GET`
+- **描述：** 获取当前跟踪星体的赤经和赤纬信息。HDMS格式
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+
+    "ra_h":13,    // 赤经
+    "ra_m":15,    // 赤经
+    "ra_s":30.0,    // 赤经
+  
+    "dec_d":45,   // 赤纬
+    "dec_m":30,   // 赤纬
+    "dec_s":0.0,   // 赤纬
+
+}
+```
+
+### `/set_RA_DEC_Float`
 
 - **方法：** `POST`
-- **描述：** 当前坐标另转动偏移量(x0,y0)+(x1,y1)->(x2,y2)。(12.33，5.79)+(5.37,30.21)->(17.67,36.00)
+- **描述：** 设置当前跟踪星体的赤经和赤纬信息。浮点格式
 - **请求参数：**
 
 ```json
 {
-    "azimuth":5.37,    // 方位角
-    "altitude":30.21   // 高度角
+    "ra":13.25,    // 赤经
+    "dec":45.75   // 赤纬
 }
 ```
 
@@ -212,24 +235,23 @@
 }
 ```
 
-- **响应（寻星仪电机正在工作）：**
-
-```json
-{
-    "status":"Celestial Stepper is Working!"
-}
-```
-
-### ``/move_absolute``
+### `/set_RA_DEC_HDMS`
 
 - **方法：** `POST`
-- **描述：** 原点坐标转至绝对位置(0,0)+(x,y)->(x,y)。(0.0，0.0)+(5.37,30.21)->(5.37,30.21)。转动至绝对位置（可能逆向运动）
+- **描述：** 设置当前跟踪星体的赤经和赤纬信息。HDMS格式
 - **请求参数：**
 
 ```json
 {
-    "azimuth":5.37,    // 方位角
-    "altitude":30.21   // 高度角
+
+    "ra_h":13,    // 赤经
+    "ra_m":15,    // 赤经
+    "ra_s":30.0,    // 赤经
+  
+    "dec_d":45,   // 赤纬
+    "dec_m":30,   // 赤纬
+    "dec_s":0.0,   // 赤纬
+
 }
 ```
 
@@ -238,14 +260,6 @@
 ```json
 {
     "status":"OK"
-}
-```
-
-- **响应（寻星仪电机正在工作）：**
-
-```json
-{
-    "status":"Celestial Stepper is Working!"
 }
 ```
 
@@ -261,11 +275,12 @@
 * v1.0.0:初始版本，包含基础接口 `/get_status`、`/get_config`、`/get_time` 和 `/get_gps`以及 `/set_status`、`/set_config`、`/set_time` 和 `/set_gps`。
 * v1.0.1：新增 `/get_coordinate`、`/move_relative`和 `/move_absolute`三个接口
 * v1.0.2：更新了 `/move_relative`和 `/move_absolute`两个接口调用时电机忙碌状态下的返回json
+* v1.1.0：新增了`/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和`/set_RA_DEC_HDMS`四个接口。删除了`/get_coordinate`、`/move_relative`和 `/move_absolute`。
 
 ### 更新内容：
 
 - 增加了 `/set_status`、`/set_config`、`/set_time` 和 `/set_gps` 的 POST 请求示例。
 - 增加了 `/get_coordinate`、`/move_relative`和 `/move_absolute`的相关接口示例
 - 更新了 `/move_relative`和 `/move_absolute`的相关接口示例
-
+- 更新了`/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和`/set_RA_DEC_HDMS`的相关接口示例
 如果还有其他需求或接口说明，请随时调整和完善。

@@ -168,11 +168,11 @@ void calculate_az_alt(
     azimuth_deg = (sin(ha_rad) > 0) ? fmod(360.0 - az_rad * RAD_TO_DEG, 360.0) : az_rad * RAD_TO_DEG;
 }
 
-void CalculatePosition(int year, int month, int day, int hour, int minute, int second,                                                      // UTC Time
-                       int lon_d, int lon_m, double lon_s, // example lon 44° 44′ 44″
-                       int lat_d, int lat_m, double lat_s, // example lat 55° 55′ 55″
-                       int ra_h, int ra_m, double ra_s,    // example ra 20h 41m 25.91s
-                       int dec_d, int dec_m, double dec_s, // example dec 45° 16′ 49.2s
+void CalculatePosition(int year, int month, int day, int hour, int minute, int second, // UTC Time
+                       int lon_d, int lon_m, double lon_s,                             // example lon 44° 44′ 44″
+                       int lat_d, int lat_m, double lat_s,                             // example lat 55° 55′ 55″
+                       int ra_h, int ra_m, double ra_s,                                // example ra 20h 41m 25.91s
+                       int dec_d, int dec_m, double dec_s,                             // example dec 45° 16′ 49.2s
                        float &azimuth, float &altitude)
 {
 

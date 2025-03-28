@@ -4,7 +4,7 @@
 #include "SerialMessage.hpp"
 #include "WiFiApSta.hpp"
 #include "CelestialPositioning.hpp"
-#include "GPSInfo.hpp"
+// #include "GPSInfo.hpp"
 #include "CelestialStepper.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
@@ -15,12 +15,10 @@ void onOTAEnd(bool success);
 
 void WebServerEvent();
 // Server API events
-void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/status
-void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/config
-void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/set_status
-void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	// POST http://localhost:3000/set_config
-void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/move_relative
-void handleMoveAbsolute(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/move_absolute
+void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_status
+void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_config
+void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_RA_DEC_Float
+void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data);  // POST http://localhost:3000/set_RA_DEC_HDMS
 
 void onOTAStart()
 {
@@ -83,63 +81,80 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/main.equatorial.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
-	// Get Stepper Coordinate(azimuth and altitude) from SPIFFS
-	server.on("/get_coordinate", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { File coordinateFile = SPIFFS.open("/Coordinate.json", "r");
-	JsonDocument coordinateJson;
-	DeserializationError coordinateFileerror = deserializeJson(coordinateJson, coordinateFile);
-	if (coordinateFileerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-		return;
-	}
-	coordinateFile.close();
-
-	// make resp json object
-	JsonDocument respJson;
-	respJson["azimuth"] = coordinateJson["azimuth"];
-	respJson["altitude"] = coordinateJson["altitude"];
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response); });
-
-	// Server api
-	// server.on("/buzz", HTTP_GET, [](AsyncWebServerRequest *request)
-	//           { request->send(200, "application/json", "{\"message\":\"Buzz play Little Star\"}");
-	//             vTaskResume(xHandleBuzzPlayLittleStar);
-	//           });
-
-	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-						 {
-        if(request->method()==HTTP_POST && request->contentType()=="application/json"){
-            if(request->url()=="/status"){
-                handleGetStatus(request,data);
-            }else if(request->url()=="/config"){
-                handleGetConfig(request,data);
-            }else if(request->url()=="/set_status"){
-                handleSetStatus(request,data);
-            }else if(request->url()=="/set_config"){
-                handleSetStatus(request,data);
-            }else if(request->url()=="/move_relative"){
-				handleMoveRelative(request,data);
-			}else if(request->url()=="/move_absolute"){
-				handleMoveAbsolute(request,data);
+	// Get RA and DEC in HDMS format
+	server.on("/get_RA_DEC_HDMS", HTTP_GET, [](AsyncWebServerRequest *request)
+			  {
+		 File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
+			JsonDocument RA_DEC_Json;
+			DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
+			if (RA_DEC_Fileerror)
+			{
+				request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+				return;
 			}
-            else{
-                request->send(500);
-            }
-        } });
-}
-void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/status
-{
-	// check req json validation
-	JsonDocument reqJson;
-	DeserializationError reqJsonError = deserializeJson(reqJson, data);
-	if (reqJsonError)
-	{
-		request->send(400, "text/plain", "Invalid JSON");
-		return;
-	}
+			RA_DEC_File.close();
+				// make resp json object
+				double ra=RA_DEC_Json["ra"];
+				double dec=RA_DEC_Json["dec"];
+				int ra_h,ra_m,dec_d,dec_m;
+				double ra_s,dec_s;
+				degrees_to_hms(ra, ra_h, ra_m, ra_s);
+				degrees_to_dms(dec, dec_d, dec_m, dec_s);
+		JsonDocument respJson;
+		respJson["ra_h"] =ra_h;
+		respJson["ra_m"] =ra_m; 
+		respJson["ra_s"] =ra_s; 
+		respJson["dec_d"] = dec_d;
+		respJson["dec_m"] = dec_m;
+		respJson["dec_s"] = dec_s;
+		String response;
+		serializeJson(respJson, response);
+		request->send(200, "application/json", response); });
+	// Get RA and DEC in float format
+	server.on("/get_RA_DEC_Float", HTTP_GET, [](AsyncWebServerRequest *request)
+			  {
+			File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
+			JsonDocument RA_DEC_Json;
+			DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
+			if (RA_DEC_Fileerror)
+			{
+ 			 request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+ 			 return;
+			}
+			RA_DEC_File.close();
+  			// make resp json object
+			JsonDocument respJson;
+			respJson["ra"] =RA_DEC_Json["ra"];
+			respJson["dec"] = RA_DEC_Json["dec"];
+
+			String response;
+			serializeJson(respJson, response);
+			request->send(200, "application/json", response); });
+	// Get Config
+	server.on("/get_config", HTTP_GET, [](AsyncWebServerRequest *request)
+			  {
+				File configFile = SPIFFS.open("/Config.json", "r");
+				JsonDocument configJson;
+				DeserializationError configFileerror = deserializeJson(configJson, configFile);
+				if (configFileerror)
+				{
+					request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+					return;
+				}
+				configFile.close();
+			
+				// make resp json object
+				JsonDocument respJson;
+				respJson["ssid"] = configJson["SSID"];
+				respJson["pwd"] = configJson["pwd"];
+				respJson["ratio"] = configJson["ratio"];
+				String response;
+				serializeJson(respJson, response);
+				request->send(200, "application/json", response); });
+	// Get Status
+	server.on("/get_status", HTTP_GET, [](AsyncWebServerRequest *request)
+			  {
+
 	// make resp json object
 
 	File statusFile = SPIFFS.open("/Status.json", "r");
@@ -160,37 +175,26 @@ void handleGetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	innerObjectS["s"] = statusJson["s"];
 	String response;
 	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
+	request->send(200, "application/json", response); });
+	// POST API
+	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+						 {
+        if(request->method()==HTTP_POST && request->contentType()=="application/json"){
+            if(request->url()=="/set_status"){
+                handleSetStatus(request,data);
+            }else if(request->url()=="/set_config"){
+                handleSetStatus(request,data);
+			}else if(request->url()=="/set_RA_DEC_Float"){
+                handleSetRA_DEC_Float(request,data);
+			}else if(request->url()=="/set_RA_DEC_HDMS"){
+                handleSetRA_DEC_HDMS(request,data);
+			}
+            else{
+                request->send(500);
+            }
+        } });
 }
-void handleGetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/config
-{
-	// check req json validation
-	JsonDocument reqJson;
-	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
-	if (reqJsonerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON");
-		return;
-	}
-	File configFile = SPIFFS.open("/Config.json", "r");
-	JsonDocument configJson;
-	DeserializationError configFileerror = deserializeJson(configJson, configFile);
-	if (configFileerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-		return;
-	}
-	configFile.close();
 
-	// make resp json object
-	JsonDocument respJson;
-	respJson["ssid"] = configJson["SSID"];
-	respJson["pwd"] = configJson["pwd"];
-	respJson["ratio"] = configJson["ratio"];
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
-}
 void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_status
 {
 	// check req json validation
@@ -297,21 +301,8 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	request->send(200, "application/json", response);
 }
 
-void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/move_relative
+void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_RA_DEC_Float
 {
-
-	// make sure Celestial Stepper is IDLE
-	if ((xTaskHandle_Move_Horizontal != NULL && eTaskGetState(xTaskHandle_Move_Horizontal) != eDeleted) ||
-		(xTaskHandle_Move_Vertical != NULL && eTaskGetState(xTaskHandle_Move_Vertical) != eDeleted))
-	{
-		// make resp json object
-		JsonDocument notIDLEJson;
-		notIDLEJson["status"] = "Celestial Stepper is Working!";
-		String response;
-		serializeJson(notIDLEJson, response);
-		request->send(200, "application/json", response);
-	}
-
 	JsonDocument reqJson;
 	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
 	if (reqJsonerror)
@@ -319,40 +310,13 @@ void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data) // POST h
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
-	float req_azimuth = reqJson["azimuth"];
-	float req_altitude = reqJson["altitude"];
 
-	File coordinateFileR = SPIFFS.open("/Coordinate.json", "r");
-	JsonDocument coordinateRJson;
-	DeserializationError coordinateFileRerror = deserializeJson(coordinateRJson, coordinateFileR);
-	if (coordinateFileRerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-		return;
-	}
-	coordinateFileR.close();
-
-	// float az = coordinateRJson["azimuth"].as<float>();
-	// float azimuth = az + req_azimuth;
-
-	// float al = coordinateRJson["altitude"].as<float>();
-	// float altitude = al + req_altitude;
-	// Write new coordinate to SPIFFS
-	File coordinateFileW = SPIFFS.open("/Coordinate.json", "w");
-	JsonDocument coordinateWJson;
-	coordinateWJson["azimuth"] = req_azimuth;
-	coordinateWJson["altitude"] = req_altitude;
-	serializeJson(coordinateWJson, coordinateFileW);
-	coordinateFileW.close();
-
-	// Call CelestialStepper
-	ledcDetachPin(Pin_Stepper_Equator_Step);
-	int64_t pluse_hor = Pluse_Horizontal(req_azimuth);
-	int64_t pluse_vec = Pluse_Vertical(req_altitude);
-
-	xTaskCreate(task_Move_Horizontal, "Move Horizontal", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_hor, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Horizontal);
-	xTaskCreate(task_Move_Vertical, "Move Vertical", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_vec, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Vertical);
-
+	double ra = reqJson["ra"];
+	double dec = reqJson["dec"];
+	// Write RA and DEC to SPIFFS
+	File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "w");
+	serializeJson(reqJson, RA_DEC_File);
+	RA_DEC_File.close();
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
@@ -360,20 +324,9 @@ void handleMoveRelative(AsyncWebServerRequest *request, uint8_t *data) // POST h
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
 }
-void handleMoveAbsolute(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/move_absolute
+void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data)
+// POST http://localhost:3000/set_RA_DEC_HDMS
 {
-	// make sure Celestial Stepper is IDLE
-	if ((xTaskHandle_Move_Horizontal != NULL && eTaskGetState(xTaskHandle_Move_Horizontal) != eDeleted) ||
-		(xTaskHandle_Move_Vertical != NULL && eTaskGetState(xTaskHandle_Move_Vertical) != eDeleted))
-	{
-		// make resp json object
-		JsonDocument notIDLEJson;
-		notIDLEJson["status"] = "Celestial Stepper is Working!";
-		String response;
-		serializeJson(notIDLEJson, response);
-		request->send(200, "application/json", response);
-	}
-
 	JsonDocument reqJson;
 	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
 	if (reqJsonerror)
@@ -381,40 +334,22 @@ void handleMoveAbsolute(AsyncWebServerRequest *request, uint8_t *data) // POST h
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
-	float req_azimuth = reqJson["azimuth"];
-	float req_altitude = reqJson["altitude"];
+	int ra_h, ra_m, dec_d, dec_m;
+	double ra_s, dec_s;
+	ra_h = reqJson["ra_h"];
+	ra_m = reqJson["ra_m"];
+	ra_s = reqJson["ra_s"];
+	dec_d = reqJson["dec_d"];
+	dec_m = reqJson["dec_m"];
+	dec_s = reqJson["dec_s"];
 
-	File coordinateFileR = SPIFFS.open("/Coordinate.json", "r");
-	JsonDocument coordinateRJson;
-	DeserializationError coordinateFileRerror = deserializeJson(coordinateRJson, coordinateFileR);
-	if (coordinateFileRerror)
-	{
-		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-		return;
-	}
-	coordinateFileR.close();
+	double ra = hms_to_hours(ra_h, ra_m, ra_s);
+	double dec = dms_to_degrees(dec_d, dec_m, dec_s);
 
-	float az = coordinateRJson["azimuth"].as<float>();
-	float azimuth = req_azimuth - az;
-
-	float al = coordinateRJson["altitude"].as<float>();
-	float altitude = req_altitude - al;
-	// Write new coordinate to SPIFFS
-	File coordinateFileW = SPIFFS.open("/Coordinate.json", "w");
-	JsonDocument coordinateWJson;
-	coordinateWJson["azimuth"] = azimuth;
-	coordinateWJson["altitude"] = altitude;
-	serializeJson(coordinateWJson, coordinateFileW);
-	coordinateFileW.close();
-
-	// Call CelestialStepper
-	ledcDetachPin(Pin_Stepper_Equator_Step);
-	int64_t pluse_hor = Pluse_Horizontal(azimuth);
-	int64_t pluse_vec = Pluse_Vertical(altitude);
-
-	xTaskCreate(task_Move_Horizontal, "Move Horizontal", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_hor, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Horizontal);
-	xTaskCreate(task_Move_Vertical, "Move Vertical", configMINIMAL_STACK_SIZE + 8192, (void *)pluse_vec, configMAX_PRIORITIES - 3, &xTaskHandle_Move_Vertical);
-
+	// Write RA and DEC to SPIFFS
+	File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "w");
+	serializeJson(reqJson, RA_DEC_File);
+	RA_DEC_File.close();
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
