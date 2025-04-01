@@ -56,7 +56,7 @@ void WiFi_AP_Init()
         {
             JsonDocument configJson;
             DeserializationError error = deserializeJson(configJson, configFile);
-            if (error || !configJson.containsKey("ssid") || !configJson.containsKey("pwd"))
+            if (error || !configJson["ssid"].is<String>()|| !configJson["pwd"].is<String>())
             {
                 xQueueSend(queueHandle_Serial0, &"Invalid Json content, Using default configuration", (TickType_t)0);
                 xQueueSend(queueHandle_Serial0, &"Setting AP (Access Point)…", (TickType_t)0);

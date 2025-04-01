@@ -36,13 +36,13 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer);
-    xTaskCreate(
-        task_GPSInfo,
-        "GPSInfo",
-        configMINIMAL_STACK_SIZE + 8192,
-        NULL,
-        configMAX_PRIORITIES - 3,
-        &xTaskHandle_GPSInfo);
+    // xTaskCreate(
+    //     task_GPSInfo,
+    //     "GPSInfo",
+    //     configMINIMAL_STACK_SIZE + 8192,
+    //     NULL,
+    //     configMAX_PRIORITIES - 3,
+    //     &xTaskHandle_GPSInfo);
 }
 void task_AsyncWebServer(void *parameters)
 {
