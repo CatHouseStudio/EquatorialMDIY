@@ -193,7 +193,7 @@ void WebServerEvent()
             if(request->url()=="/set_status"){
                 handleSetStatus(request,data);
             }else if(request->url()=="/set_config"){
-                handleSetStatus(request,data);
+                handleSetConfig(request,data);
 			}else if(request->url()=="/set_RA_DEC_Float"){
                 handleSetRA_DEC_Float(request,data);
 			}else if(request->url()=="/set_RA_DEC_HDMS"){
