@@ -32,12 +32,6 @@ jobs:
       run: |
         platformio run -e ${{ matrix.board }}
 
-    - name: 📦 Upload firmware
-      uses: actions/upload-artifact@v2  # ✅ 显式锁定版本
-      with:
-        name: firmware-${{ matrix.board }}
-        path: .pio/build/${{ matrix.board }}/firmware.bin
-
     - name: 🔍 Check firmware size
       run: |
         SIZE=$(stat -c%s ".pio/build/${{ matrix.board }}/firmware.bin")
