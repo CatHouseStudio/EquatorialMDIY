@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        board: [az-delivery-devkit-v4]  # ⬅️ 这里写你在 platformio.ini 中的环境名称（如 [env:esp32dev]）
+        board: [esp32dev]  # ⬅️ 这里写你在 platformio.ini 中的环境名称（如 [env:esp32dev]）
 
     steps:
     - name: 📥 Checkout code
