@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        board: [esp32dev]  # ⬅️ 这里写你在 platformio.ini 中的环境名称（如 [env:esp32dev]）
+        board: [esp32dev]
 
     steps:
     - name: 📥 Checkout code
@@ -33,7 +33,7 @@ jobs:
         platformio run -e ${{ matrix.board }}
 
     - name: 📦 Upload firmware
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3.1.3  # ✅ 显式锁定版本
       with:
         name: firmware-${{ matrix.board }}
         path: .pio/build/${{ matrix.board }}/firmware.bin
@@ -42,7 +42,7 @@ jobs:
       run: |
         SIZE=$(stat -c%s ".pio/build/${{ matrix.board }}/firmware.bin")
         echo "Firmware size: $SIZE bytes"
-        MAX_SIZE=1048576  # ⬅️ 默认 1MB，如果你 OTA 限制是 1.5MB 可以改成 1572864
+        MAX_SIZE=1048576
         if [ "$SIZE" -gt "$MAX_SIZE" ]; then
           echo "❌ Firmware too big for OTA! ($SIZE bytes)"
           exit 1
