@@ -6,6 +6,7 @@
 #include "CelestialPositioning.hpp"
 // #include "GPSInfo.hpp"
 #include "CelestialStepper.hpp"
+#include "TiltFusionMPU6050.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
 
@@ -186,6 +187,18 @@ void WebServerEvent()
 				String response;
 				serializeJson(respJson, response);
 				request->send(200, "application/json", response); });
+	// Get TiltFusion MPU6050
+	server.on("/get_TiltFusion", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { 
+				float r,p,z;
+				safeGetAngles(r,p,z);
+		  		JsonDocument respJson; 
+		 	 	respJson["roll"]=r;
+				respJson["pitch"] =r;
+				respJson["ztilt"] =z;
+		 		String response;
+		  		serializeJson(respJson, response);
+		  		request->send(200, "application/json", response); });
 	// POST API
 	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 						 {

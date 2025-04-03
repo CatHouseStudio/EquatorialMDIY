@@ -3,17 +3,16 @@
 #include "SerialMessage.hpp"
 #include "WebServer.hpp"
 
-
 // tasks
 void task_Serial0Output(void *parameter);
 void task_AsyncWebServer(void *parameters);
+void task_TiltFusion(void *parameters);
 
 // task handle
 static TaskHandle_t xTaskHandle_Serial0Output;
 static TaskHandle_t xTaskHandle_AsyncWebServer;
 static TaskHandle_t xTaskHandle_GPSInfo;
-
-
+static TaskHandle_t xTaskHandle_TiltFusion;
 
 // task create
 void task_Create(void);
@@ -36,6 +35,13 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer);
+    xTaskCreate(
+        task_TiltFusion,
+        "Enable TiltFusion MPU6050",
+        configMINIMAL_STACK_SIZE + 4096,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        &xTaskHandle_TiltFusion);
     // xTaskCreate(
     //     task_GPSInfo,
     //     "GPSInfo",
@@ -60,6 +66,15 @@ void task_AsyncWebServer(void *parameters)
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
+void task_TiltFusion(void *parameters)
+{
+    InitTiltFusion();
+    for (;;)
+    {
+        safeUpdateTiltFusion();
+        vTaskDelay(pdMS_TO_TICKS(20)); // too low may block "thread"
+    }
+}
 
 void task_Serial0Output(void *parameter)
 {
@@ -77,4 +92,3 @@ void task_Serial0Output(void *parameter)
         // vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
-
