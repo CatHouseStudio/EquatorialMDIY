@@ -201,6 +201,30 @@ void WebServerEvent()
 		 		String response;
 		  		serializeJson(respJson, response);
 		  		request->send(200, "application/json", response); });
+	// Get GPS
+	server.on("/get_gps", HTTP_GET, [](AsyncWebServerRequest *request)
+			  { 
+				File gpsFile = SPIFFS.open("/GPS.json", "r");
+				JsonDocument gpsJson;
+				DeserializationError configFileerror = deserializeJson(gpsJson, gpsFile);
+				if (configFileerror)
+				{
+					request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+					return;
+				}
+				gpsFile.close();
+			
+				// make resp json object
+				JsonDocument respJson;
+				respJson["lon_d"]=gpsJson["lon_d"];
+				respJson["lon_m"]=gpsJson["lon_m"];
+				respJson["lon_s"]=gpsJson["lon_s"];
+				respJson["lat_d"]=gpsJson["lat_d"];
+				respJson["lat_m"]=gpsJson["lat_m"];
+				respJson["lat_s"]=gpsJson["lat_s"];
+				String response;
+				serializeJson(respJson, response);
+				request->send(200, "application/json", response); });
 	// POST API
 	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 						 {
@@ -213,6 +237,8 @@ void WebServerEvent()
                 handleSetRA_DEC_Float(request,data);
 			}else if(request->url()=="/set_RA_DEC_HDMS"){
                 handleSetRA_DEC_HDMS(request,data);
+			}else if(request->url()=="/set_gps"){
+                handleSetGPS(request,data);
 			}
             else{
                 request->send(500);
@@ -239,25 +265,6 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	serializeJson(reqJson, statusFile);
 	statusFile.close();
 
-	//! Write your logic here
-	// TODO: set stepper motor work method
-	/* Calculate azimuth and altitude here
-	 if (xSemaphoreTake(semphr_gps_info_Mutex, portMAX_DELAY) == pdTRUE) {
-		gpsinfo.相关信息
-		// void CalculatePosition(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second,
-		//                float longitude, float latitude, // 示例经度和纬度：121.93, 30.9
-		//                float raHours, float decDegrees, // 示例北极星的赤经和赤纬：2.9667, 89.25
-		//                float &azimuth, float &altitude);// 方位角和高度角
-		CalculatePosition(相关参数，最后两个参数是方位角和高度角)
-		xSemaphoreGive(semphr_gps_info_Mutex);
-
-		// 生成和发送响应
-		// 例如：sprintf(response, "Latitude: %f, Longitude: %f", lat, lon);
-		// sendResponse(response);
-	}
-
-	*/
-
 	// set coordinate content to 0.0 and 0.0
 	File coordinateFile = SPIFFS.open("/Coordinate.json", "w");
 	JsonDocument coordinateJson;
@@ -265,10 +272,6 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	coordinateJson["altitude"] = 0.0;
 	serializeJson(coordinateJson, coordinateFile);
 	coordinateFile.close();
-
-	// * I use "d" as direction and "s" as frequency
-	// Attach the PWM OUTPUT
-
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
@@ -364,4 +367,31 @@ void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data)
 
 void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_gps
 {
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON");
+		return;
+	}
+
+	int lon_d, lon_m, lat_d, lat_m;
+	double lon_s, lat_s;
+
+	lon_d = reqJson["lon_d"];
+	lon_m = reqJson["lon_m"];
+	lon_s = reqJson["lon_s"];
+	lat_d = reqJson["lat_d"];
+	lat_m = reqJson["lat_m"];
+	lat_s = reqJson["lat_s"];
+	// Write RA and DEC to SPIFFS
+	File RA_DEC_File = SPIFFS.open("/GPS.json", "w");
+	serializeJson(reqJson, RA_DEC_File);
+	RA_DEC_File.close();
+	// make resp json object
+	JsonDocument respJson;
+	respJson["status"] = "OK";
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
 }

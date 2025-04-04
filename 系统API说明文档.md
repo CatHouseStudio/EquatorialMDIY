@@ -12,22 +12,22 @@
 
 ## API 接口一览
 
-| 接口                | 请求方法 | 描述                                       | 备注                                 |
-| ------------------- | -------- | ------------------------------------------ | ------------------------------------ |
-| `/get_status`       | `GET`    | 获取当前设备工作状态                       |                                      |
-| `/get_config`       | `GET`    | 获取当前设备网络状态                       |                                      |
-| `/get_time`         | `GET`    | 获取当前设备时间信息                       |                                      |
-| `/get_gps`          | `GET`    | 获取当前设备位置信息                       |                                      |
-| `/set_status`       | `POST`   | 设置当前设备工作状态                       |                                      |
-| `/set_config`       | `POST`   | 设置当前设备网络状态                       |                                      |
-| `/set_time`         | `POST`   | 设置当前设备时间信息                       | 若数据来源为gps模块，则可以删去此api |
-| `/set_gps`          | `POST`   | 设置当前设备位置信息                       | 若数据来源为gps模块，则可以删去此api |
-| `/get_RA_DEC_Float` | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                      |
-| `/get_RA_DEC_HDMS`  | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                      |
-| `/set_RA_DEC_Float` | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。浮点格式 |                                      |
-| `/set_RA_DEC_HDMS`  | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                      |
-| `/get_EfuseMac`     | `GET`    | 获取当前设备的芯片ID                       |                                      |
-| `/get_TiltFusion`   | `GET`    | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22      |
+| 接口                  | 请求方法 | 描述                                       | 备注                            |
+| --------------------- | -------- | ------------------------------------------ | ------------------------------- |
+| `/get_status`       | `GET`  | 获取当前设备工作状态                       |                                 |
+| `/get_config`       | `GET`  | 获取当前设备网络状态                       |                                 |
+| `/get_time`         | `GET`  | 获取当前设备时间信息                       | （尚未确定）                    |
+| `/get_gps`          | `GET`  | 获取当前设备位置信息                       |                                 |
+| `/set_status`       | `POST` | 设置当前设备工作状态                       |                                 |
+| `/set_config`       | `POST` | 设置当前设备网络状态                       |                                 |
+| `/set_time`         | `POST` | 设置当前设备时间信息                       | (尚未确定)                      |
+| `/set_gps`          | `POST` | 设置当前设备位置信息                       |                                 |
+| `/get_RA_DEC_Float` | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
+| `/get_RA_DEC_HDMS`  | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
+| `/set_RA_DEC_Float` | `POST` | 设置当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
+| `/set_RA_DEC_HDMS`  | `POST` | 设置当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
+| `/get_EfuseMac`     | `GET`  | 获取当前设备的芯片ID                       |                                 |
+| `/get_TiltFusion`   | `GET`  | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22 |
 
 ## 接口详细说明
 
@@ -87,8 +87,12 @@
 
 ```json
 {
-    "longitude":121.93526597,   // 经度
-    "latitude":30.92149876      // 纬度
+    "lon_d": 33,
+    "lon_m": 33,
+    "lon_s": 33.3,
+    "lat_d": 44,
+    "lat_m": 44,
+    "lat_s": 44.4
 }
 ```
 
@@ -167,8 +171,12 @@
 
 ```json
 {
-    "longitude":121.93526597,   // 经度
-    "latitude":30.92149876      // 纬度
+    "lon_d": 33,
+    "lon_m": 33,
+    "lon_s": 33.3,
+    "lat_d": 44,
+    "lat_m": 44,
+    "lat_s": 44.4
 }
 ```
 
@@ -278,6 +286,7 @@
 }
 
 ```
+
 ### `/get_TiltFusion`
 
 - **方法：** `GET`
@@ -292,6 +301,7 @@
 	"ztilt" :3.3        // 总倾角	    ≈ 纬度（理论上约等于 pitch 的绝对值）
 }
 ```
+
 ## 错误代码
 
 * 400 Bad Request：请求参数不完整或无效。
@@ -306,7 +316,7 @@
 * v1.0.2：更新了 `/move_relative`和 `/move_absolute`两个接口调用时电机忙碌状态下的返回json
 * v1.0.3：新增了 `/get_EfuseMac`接口，用于获得esp32设备的唯一id。
 * v1.1.0：新增了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`四个接口。删除了 `/get_coordinate`、`/move_relative`和 `/move_absolute`。
-* v1.1.1：新增了`/get_TiltFusion`接口，用于获取当前相机的空间姿态。
+* v1.1.1：新增了 `/get_TiltFusion`接口，用于获取当前相机的空间姿态。
 
 ### 更新内容：
 
@@ -315,5 +325,5 @@
 - 更新了 `/move_relative`和 `/move_absolute`的相关接口示例
 - 增加了 `/get_EfuseMac`接口的请求示例
 - 更新了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`的相关接口示例
-- 更新了`/get_TiltFusion`接口示例
-如果还有其他需求或接口说明，请随时调整和完善。
+- 更新了 `/get_TiltFusion`接口示例
+  如果还有其他需求或接口说明，请随时调整和完善。
