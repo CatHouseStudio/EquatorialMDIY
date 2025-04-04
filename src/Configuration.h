@@ -63,20 +63,17 @@
 // ================================================
 
 // Set the Stepper Motors' PIN.
-// Equator Stepper
-// TODO you must change the pin value
-const uint8_t Pin_Stepper_Equator_Dir = 33;
-const uint8_t Pin_Stepper_Equator_Step = 25;
 
 // Celestial Stepper
 // TODO you must change the pin value
-// Horizontal Stepper
-const uint8_t Pin_Stepper_Horizontal_Dir = 33;
-const uint8_t Pin_Stepper_Horizontal_Step = 25;
+// In this case, you should connect the pin of enable to gnd.
+// RA Stepper
+const uint8_t Pin_Stepper_RA_Dir = 33;
+const uint8_t Pin_Stepper_RA_Step = 25;
 
-// Vertical Stepper
-const uint8_t Pin_Stepper_Vertical_Dir = 26;
-const uint8_t Pin_Stepper_Vertical_Step = 27;
+// DEC Stepper
+const uint8_t Pin_Stepper_DEC_Dir = 26;
+const uint8_t Pin_Stepper_DEC_Step = 27;
 
 // =============================================
 // Set the Serials' Bit rate
@@ -86,38 +83,23 @@ const uint8_t Pin_Serial_GPS_RX = 16;
 const uint8_t Pin_Serial_GPS_TX = 17;
 const unsigned long Serial_GPS_Bit_Rate = 4800;
 
-// Set the Stepper Motors' Parameter.
-// Equator Stepper
-const uint8_t Stepper_Equator_Initialize_Dir = HIGH;
-const uint8_t Stepper_Equator_Work_Dir = LOW;
-const uint8_t Stepper_Equator_Freq = 74; // 74Hz
-const uint8_t Stepper_Equator_Channel = 0;
-const uint8_t Stepper_Equator_resolution = 8;
-const uint8_t Stepper_Equator_dutyCycle = 128;
-// * Stepper Motor Status
-const uint8_t Stepper_Equator_Status_Clockwise = 0;
-const uint8_t Stepper_Equator_Status_CounterClockwise = 1;
-const uint8_t Stepper_Equator_Status_Stop = 2;
-
-// Horizontal Stepper
-const uint8_t Stepper_Horizontal_Initialize_Dir = HIGH;
-const uint8_t Stepper_Horizontal_Work_Dir = LOW;
-const uint32_t Stepper_Horizontal_DelayMs = 250;
-const float Stepper_Horizontal_K = 114514; // Mechanical structure reduction ratio coefficient
-// Vertical Stepper
-const uint8_t Stepper_Vertical_Initialize_Dir = HIGH;
-const uint8_t Stepper_Vertical_Work_Dir = LOW;
-const uint32_t Stepper_Vertical_DelayMs = 250;
-const float Stepper_Vertical_K = 114514; // Mechanical structure reduction ratio coefficient
+// RA Stepper
+const uint8_t Stepper_RA_Initialize_Dir = HIGH;
+const uint8_t Stepper_RA_Work_Dir = LOW;
+const uint32_t Stepper_RA_DelayMs = 250;
+const float Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
+// DEC Stepper
+const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
+const uint8_t Stepper_DEC_Work_Dir = LOW;
+const uint32_t Stepper_DEC_DelayMs = 250;
+const float Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
-    // Equator Stepper
-    pinMode(Pin_Stepper_Equator_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Equator_Step, OUTPUT);
-    pinMode(Pin_Stepper_Horizontal_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Horizontal_Step, OUTPUT);
-    pinMode(Pin_Stepper_Vertical_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Vertical_Step, OUTPUT);
+    // Stepper
+    pinMode(Pin_Stepper_RA_Dir, OUTPUT);
+    pinMode(Pin_Stepper_RA_Step, OUTPUT);
+    pinMode(Pin_Stepper_DEC_Dir, OUTPUT);
+    pinMode(Pin_Stepper_DEC_Step, OUTPUT);
 
 }

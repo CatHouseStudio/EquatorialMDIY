@@ -20,6 +20,8 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	   // POST 
 void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_config
 void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_RA_DEC_Float
 void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data);  // POST http://localhost:3000/set_RA_DEC_HDMS
+void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_gps
+void handleSetTime(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_time
 
 void onOTAStart()
 {
@@ -266,27 +268,6 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 
 	// * I use "d" as direction and "s" as frequency
 	// Attach the PWM OUTPUT
-	ledcAttachPin(Pin_Stepper_Equator_Step, Stepper_Equator_Channel);
-	switch (d)
-	{
-	case Stepper_Equator_Status_Clockwise:
-		digitalWrite(Pin_Stepper_Equator_Dir, Stepper_Equator_Initialize_Dir);
-		ledcSetup(Stepper_Equator_Channel, s, Stepper_Equator_resolution);
-		ledcWrite(Stepper_Equator_Channel, Stepper_Equator_dutyCycle);
-		break;
-	case Stepper_Equator_Status_CounterClockwise:
-		digitalWrite(Pin_Stepper_Equator_Dir, Stepper_Equator_Work_Dir);
-		ledcSetup(Stepper_Equator_Channel, s, Stepper_Equator_resolution);
-		ledcWrite(Stepper_Equator_Channel, Stepper_Equator_dutyCycle);
-		break;
-	case Stepper_Equator_Status_Stop:
-		ledcDetachPin(Pin_Stepper_Equator_Step);
-		ledcWrite(Stepper_Equator_Channel, 0); // set duty cycle to zero as stop PWM output
-		break;
-	default:
-		//! What happen?
-		break;
-	}
 
 	// make resp json object
 	JsonDocument respJson;
@@ -379,4 +360,8 @@ void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data)
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
+}
+
+void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_gps
+{
 }
