@@ -16,6 +16,16 @@ void onOTAEnd(bool success);
 
 void WebServerEvent();
 // Server API events
+// HTTP_GET
+void handleGetRA_DEC_HDMS(AsyncWebServerRequest *request);	// GET http://localhost:3000/get_RA_DEC_HDMS
+void handleGetRA_DEC_Float(AsyncWebServerRequest *request); // GET http://localhost:3000/get_RA_DEC_Float
+void handleGetConfig(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_config
+void handleGetStatus(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_status
+void handleGetEfuseMac(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_EfuseMac
+void handleGetTiltFusion(AsyncWebServerRequest *request);	// GET http://localhost:3000/get_TiltFusion
+void handleGetGPS(AsyncWebServerRequest *request);			// GET http://localhost:3000/get_gps
+
+// HTTP_POST
 void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_status
 void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_config
 void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_RA_DEC_Float
@@ -74,6 +84,7 @@ void WebServerEvent()
 		xQueueSend(queueHandle_Serial0, &"An Error has occurred while mounting SPIFFS", (TickType_t)0);
 		return;
 	}
+	// Route to load static resource
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
 	// Route to load style.css file
@@ -86,78 +97,116 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
 
 	// Get RA and DEC in HDMS format
-	server.on("/get_RA_DEC_HDMS", HTTP_GET, [](AsyncWebServerRequest *request)
-			  {
-		 File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
-			JsonDocument RA_DEC_Json;
-			DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
-			if (RA_DEC_Fileerror)
-			{
-				request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-				return;
-			}
-			RA_DEC_File.close();
-				// make resp json object
-				double ra=RA_DEC_Json["ra"];
-				double dec=RA_DEC_Json["dec"];
-				int ra_h,ra_m,dec_d,dec_m;
-				double ra_s,dec_s;
-				degrees_to_hms(ra, ra_h, ra_m, ra_s);
-				degrees_to_dms(dec, dec_d, dec_m, dec_s);
-		JsonDocument respJson;
-		respJson["ra_h"] =ra_h;
-		respJson["ra_m"] =ra_m; 
-		respJson["ra_s"] =ra_s; 
-		respJson["dec_d"] = dec_d;
-		respJson["dec_m"] = dec_m;
-		respJson["dec_s"] = dec_s;
-		String response;
-		serializeJson(respJson, response);
-		request->send(200, "application/json", response); });
+	server.on("/get_RA_DEC_HDMS", HTTP_GET, handleGetRA_DEC_HDMS);
 	// Get RA and DEC in float format
-	server.on("/get_RA_DEC_Float", HTTP_GET, [](AsyncWebServerRequest *request)
-			  {
-			File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
-			JsonDocument RA_DEC_Json;
-			DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
-			if (RA_DEC_Fileerror)
-			{
- 			 request->send(400, "text/plain", "Invalid JSON on SPIFFS");
- 			 return;
-			}
-			RA_DEC_File.close();
-  			// make resp json object
-			JsonDocument respJson;
-			respJson["ra"] =RA_DEC_Json["ra"];
-			respJson["dec"] = RA_DEC_Json["dec"];
-
-			String response;
-			serializeJson(respJson, response);
-			request->send(200, "application/json", response); });
+	server.on("/get_RA_DEC_Float", HTTP_GET, handleGetRA_DEC_Float);
 	// Get Config
-	server.on("/get_config", HTTP_GET, [](AsyncWebServerRequest *request)
-			  {
-				File configFile = SPIFFS.open("/Config.json", "r");
-				JsonDocument configJson;
-				DeserializationError configFileerror = deserializeJson(configJson, configFile);
-				if (configFileerror)
-				{
-					request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-					return;
-				}
-				configFile.close();
-			
-				// make resp json object
-				JsonDocument respJson;
-				respJson["ssid"] = configJson["SSID"];
-				respJson["pwd"] = configJson["pwd"];
-				respJson["ratio"] = configJson["ratio"];
-				String response;
-				serializeJson(respJson, response);
-				request->send(200, "application/json", response); });
+	server.on("/get_config", HTTP_GET, handleGetConfig);
 	// Get Status
-	server.on("/get_status", HTTP_GET, [](AsyncWebServerRequest *request)
-			  {
+	server.on("/get_status", HTTP_GET, handleGetStatus);
+	// Get EfuseMac
+	server.on("/get_EfuseMac", HTTP_GET, handleGetEfuseMac);
+	// Get TiltFusion MPU6050
+	server.on("/get_TiltFusion", HTTP_GET, handleGetTiltFusion);
+	// Get GPS
+	server.on("/get_gps", HTTP_GET, handleGetGPS);
+	// POST API
+	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+						 {
+        if(request->method()==HTTP_POST && request->contentType()=="application/json"){
+            if(request->url()=="/set_status"){
+                handleSetStatus(request,data);
+            }else if(request->url()=="/set_config"){
+                handleSetConfig(request,data);
+			}else if(request->url()=="/set_RA_DEC_Float"){
+                handleSetRA_DEC_Float(request,data);
+			}else if(request->url()=="/set_RA_DEC_HDMS"){
+                handleSetRA_DEC_HDMS(request,data);
+			}else if(request->url()=="/set_gps"){
+                handleSetGPS(request,data);
+			}
+            else{
+                request->send(404,"text/plain","Unknown POST endpoint");
+            }
+        }
+		else{
+			request->send(415,"text/plain","Unsupported content type");
+		} });
+}
+
+// HTTP_GET
+void handleGetRA_DEC_HDMS(AsyncWebServerRequest *request) // GET http://localhost:3000/get_RA_DEC_HDMS
+{
+	File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
+	JsonDocument RA_DEC_Json;
+	DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
+	if (RA_DEC_Fileerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	RA_DEC_File.close();
+	// make resp json object
+	double ra = RA_DEC_Json["ra"];
+	double dec = RA_DEC_Json["dec"];
+	int ra_h, ra_m, dec_d, dec_m;
+	double ra_s, dec_s;
+	degrees_to_hms(ra, ra_h, ra_m, ra_s);
+	degrees_to_dms(dec, dec_d, dec_m, dec_s);
+	JsonDocument respJson;
+	respJson["ra_h"] = ra_h;
+	respJson["ra_m"] = ra_m;
+	respJson["ra_s"] = ra_s;
+	respJson["dec_d"] = dec_d;
+	respJson["dec_m"] = dec_m;
+	respJson["dec_s"] = dec_s;
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetRA_DEC_Float(AsyncWebServerRequest *request) // GET http://localhost:3000/get_RA_DEC_Float
+{
+	File RA_DEC_File = SPIFFS.open("/RA_DEC_Float.json", "r");
+	JsonDocument RA_DEC_Json;
+	DeserializationError RA_DEC_Fileerror = deserializeJson(RA_DEC_Json, RA_DEC_File);
+	if (RA_DEC_Fileerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	RA_DEC_File.close();
+	// make resp json object
+	JsonDocument respJson;
+	respJson["ra"] = RA_DEC_Json["ra"];
+	respJson["dec"] = RA_DEC_Json["dec"];
+
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetConfig(AsyncWebServerRequest *request) // GET http://localhost:3000/get_config
+{
+	File configFile = SPIFFS.open("/Config.json", "r");
+	JsonDocument configJson;
+	DeserializationError configFileerror = deserializeJson(configJson, configFile);
+	if (configFileerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	configFile.close();
+
+	// make resp json object
+	JsonDocument respJson;
+	respJson["ssid"] = configJson["SSID"];
+	respJson["pwd"] = configJson["pwd"];
+	respJson["ratio"] = configJson["ratio"];
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/get_status
+{
 	// make resp json object
 	File statusFile = SPIFFS.open("/Status.json", "r");
 	JsonDocument statusJson;
@@ -177,75 +226,56 @@ void WebServerEvent()
 	innerObjectS["s"] = statusJson["s"];
 	String response;
 	serializeJson(respJson, response);
-				request->send(200, "application/json", response); });
-	// Get EfuseMac
-	server.on("/get_EfuseMac", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { 
-				uint64_t chipId =ESP.getEfuseMac();
-				char chipIdStr[17]; 
-    			sprintf(chipIdStr, "%012llX", chipId); 
-				JsonDocument respJson; 
-				respJson["EfuseMac"]=chipIdStr; 
-				String response;
-				serializeJson(respJson, response);
-				request->send(200, "application/json", response); });
-	// Get TiltFusion MPU6050
-	server.on("/get_TiltFusion", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { 
-				float r,p,z;
-				safeGetAngles(r,p,z);
-		  		JsonDocument respJson; 
-		 	 	respJson["roll"]=r;
-				respJson["pitch"] =r;
-				respJson["ztilt"] =z;
-		 		String response;
-		  		serializeJson(respJson, response);
-		  		request->send(200, "application/json", response); });
-	// Get GPS
-	server.on("/get_gps", HTTP_GET, [](AsyncWebServerRequest *request)
-			  { 
-				File gpsFile = SPIFFS.open("/GPS.json", "r");
-				JsonDocument gpsJson;
-				DeserializationError configFileerror = deserializeJson(gpsJson, gpsFile);
-				if (configFileerror)
-				{
-					request->send(400, "text/plain", "Invalid JSON on SPIFFS");
-					return;
-				}
-				gpsFile.close();
-			
-				// make resp json object
-				JsonDocument respJson;
-				respJson["lon_d"]=gpsJson["lon_d"];
-				respJson["lon_m"]=gpsJson["lon_m"];
-				respJson["lon_s"]=gpsJson["lon_s"];
-				respJson["lat_d"]=gpsJson["lat_d"];
-				respJson["lat_m"]=gpsJson["lat_m"];
-				respJson["lat_s"]=gpsJson["lat_s"];
-				String response;
-				serializeJson(respJson, response);
-				request->send(200, "application/json", response); });
-	// POST API
-	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-						 {
-        if(request->method()==HTTP_POST && request->contentType()=="application/json"){
-            if(request->url()=="/set_status"){
-                handleSetStatus(request,data);
-            }else if(request->url()=="/set_config"){
-                handleSetConfig(request,data);
-			}else if(request->url()=="/set_RA_DEC_Float"){
-                handleSetRA_DEC_Float(request,data);
-			}else if(request->url()=="/set_RA_DEC_HDMS"){
-                handleSetRA_DEC_HDMS(request,data);
-			}else if(request->url()=="/set_gps"){
-                handleSetGPS(request,data);
-			}
-            else{
-                request->send(500);
-            }
-        } });
+	request->send(200, "application/json", response);
 }
+void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3000/get_EfuseMac
+{
+	uint64_t chipId = ESP.getEfuseMac();
+	char chipIdStr[17];
+	sprintf(chipIdStr, "%012llX", chipId);
+	JsonDocument respJson;
+	respJson["EfuseMac"] = chipIdStr;
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost:3000/get_TiltFusion
+{
+	float r, p, z;
+	safeGetAngles(r, p, z);
+	JsonDocument respJson;
+	respJson["roll"] = r;
+	respJson["pitch"] = r;
+	respJson["ztilt"] = z;
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetGPS(AsyncWebServerRequest *request) // GET http://localhost:3000/get_gps
+{
+	File gpsFile = SPIFFS.open("/GPS.json", "r");
+	JsonDocument gpsJson;
+	DeserializationError configFileerror = deserializeJson(gpsJson, gpsFile);
+	if (configFileerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
+		return;
+	}
+	gpsFile.close();
 
+	// make resp json object
+	JsonDocument respJson;
+	respJson["lon_d"] = gpsJson["lon_d"];
+	respJson["lon_m"] = gpsJson["lon_m"];
+	respJson["lon_s"] = gpsJson["lon_s"];
+	respJson["lat_d"] = gpsJson["lat_d"];
+	respJson["lat_m"] = gpsJson["lat_m"];
+	respJson["lat_s"] = gpsJson["lat_s"];
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+// HTTP_POST
 void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_status
 {
 	// check req json validation
@@ -364,7 +394,6 @@ void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data)
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
 }
-
 void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/set_gps
 {
 	JsonDocument reqJson;

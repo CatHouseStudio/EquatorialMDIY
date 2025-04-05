@@ -1,6 +1,6 @@
 #pragma once
 #include "Configuration.h"
-
+#include "CelestialPositioning.hpp"
 int64_t Pluse_RA(float azimuth);
 int64_t Pluse_DEC(float altitude);
 
@@ -25,9 +25,15 @@ int64_t Pluse_DEC(float dec)
 }
 
 // configMAX_PRIORITIES - 3
+
+// To call this task, you should use pvPortMalloc to malloc mem on heap
 void task_Move_RA(void *parameters)
 {
-    int64_t pulse_count = (int64_t)parameters;
+    // int32_t param =(int32_t*)pvPortMalloc(sizeof(int32_t));
+    // *param =pulse;
+
+    int32_t pulse_count = *(int32_t *)parameters;
+    vPortFree(parameters);
     uint32_t pulse_generated = 0;
     const uint32_t batch_size = 100; // 一次生成的脉冲数量
     if (pulse_count < 0)
@@ -61,9 +67,13 @@ void task_Move_RA(void *parameters)
     vTaskDelete(NULL);
 }
 // configMAX_PRIORITIES - 3
+// To call this task, you should use pvPortMalloc to malloc mem on heap
 void task_Move_DEC(void *parameters)
 {
-    int64_t pulse_count = (int64_t)parameters;
+    // int32_t param =(int32_t*)pvPortMalloc(sizeof(int32_t));
+    // *param =pulse;
+
+    int32_t pulse_count = *(int32_t *)parameters;
     uint32_t pulse_generated = 0;
     const uint32_t batch_size = 100; // 一次生成的脉冲数量
     if (pulse_count < 0)

@@ -20,7 +20,7 @@
 | `/get_gps`          | `GET`  | 获取当前设备位置信息                       |                                 |
 | `/set_status`       | `POST` | 设置当前设备工作状态                       |                                 |
 | `/set_config`       | `POST` | 设置当前设备网络状态                       |                                 |
-| `/set_time`         | `POST` | 设置当前设备时间信息                       | (尚未确定)                      |
+| `/set_time`         | `POST` | 设置当前设备时间信息                       | （尚未确定）                    |
 | `/set_gps`          | `POST` | 设置当前设备位置信息                       |                                 |
 | `/get_RA_DEC_Float` | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
 | `/get_RA_DEC_HDMS`  | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
@@ -307,6 +307,7 @@
 * 400 Bad Request：请求参数不完整或无效。
 * 401 Unauthorized：缺少或提供了无效的身份验证信息。
 * 404 Not Found：请求的资源不存在。
+* 415 Unsupported Media Type：不支持请求数据的媒体格式。
 * 500 Internal Server Error：服务器端发生内部错误。
 
 ## 版本历史
@@ -317,6 +318,7 @@
 * v1.0.3：新增了 `/get_EfuseMac`接口，用于获得esp32设备的唯一id。
 * v1.1.0：新增了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`四个接口。删除了 `/get_coordinate`、`/move_relative`和 `/move_absolute`。
 * v1.1.1：新增了 `/get_TiltFusion`接口，用于获取当前相机的空间姿态。
+* v1.1.2：调整了HTTP_GET部分的路由，优化代码可读性和维护性。在Configuration.h头部的注释部分补充了DM542C驱动的细分表。按照FreeRTOS的文档建议，调整了`task_Move_RA`和`task_Move_DEC`的`parameters`传递方式。
 
 ### 更新内容：
 
