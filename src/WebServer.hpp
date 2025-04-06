@@ -295,6 +295,72 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	serializeJson(reqJson, statusFile);
 	statusFile.close();
 
+	// Calculate pulse_count for stepper motor!!!
+	uint32_t pulse_count = Pulse_DEC(123.456); // just one fake number to test
+
+	// For Example if you want to call task_MOVE_RA and task_Move_DEC, you can do things like these.
+	// if (xTaskHandle_Move_DEC == NULL)
+	// {
+	// 	MoveCommand *deccmd = (MoveCommand *)pvPortMalloc(sizeof(MoveCommand));
+	// 	if (!deccmd)
+	// 	{
+	// 		JsonDocument respJson;
+	// 		respJson["status"] = "Memory allocation failed";
+	// 		String response;
+	// 		serializeJson(respJson, response);
+	// 		request->send(200, "application/json", response);
+	// 	}
+	// 	deccmd->mode = MODE_POSITION;
+	// 	deccmd->dir = DIR_WORK;
+	// 	deccmd->pulse_count = pulse_count; // Just like use the real pulse_count from Pulse_DEC();
+	// 	deccmd->delay_us = 7355608;		   // under MODE_POSITION, the delay_us is meaningless
+	// 	xTaskCreate(task_Move_DEC, "Move DEC", configMINIMAL_STACK_SIZE + 2048, deccmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_DEC);
+	// 	JsonDocument respJson;
+	// 	respJson["status"] = "DEC move started";
+	// 	String response;
+	// 	serializeJson(respJson, response);
+	// 	request->send(200, "application/json", response);
+	// }
+	// else
+	// {
+	// 	JsonDocument respJson;
+	// 	respJson["status"] = "DEC motor is already running";
+	// 	String response;
+	// 	serializeJson(respJson, response);
+	// 	request->send(200, "application/json", response);
+	// }
+
+	// if (xTaskHandle_Move_RA == NULL)
+	// {
+	// 	// the ra motor is stop
+	// 	MoveCommand *racmd = (MoveCommand *)pvPortMalloc(sizeof(MoveCommand));
+	// 	if(!racmd){
+	// 		JsonDocument respJson;
+	// 		respJson["status"] = "Memory allocation failed";
+	// 		String response;
+	// 		serializeJson(respJson, response);
+	// 		request->send(200, "application/json", response);
+	// 	}
+	// 	racmd->mode = MODE_CONTINUOUS;
+	// 	racmd->dir = DIR_WORK;
+	// 	racmd->pulse_count = 0;	   // under MODE_CONTINUOUS, the pulse_count is meaningless
+	// 	racmd->delay_us = 7355608; // just one fake number to test
+	// 	xTaskCreate(task_Move_RA, "Move RA", configMINIMAL_STACK_SIZE + 2048, racmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
+	// 	JsonDocument respJson;
+	// 	respJson["status"] = "RA move started";
+	// 	String response;
+	// 	serializeJson(respJson, response);
+	// 	request->send(200, "application/json", response);
+	// }
+	// else
+	// {
+	// 	JsonDocument respJson;
+	// 	respJson["status"] = "RA motor is already running";
+	// 	String response;
+	// 	serializeJson(respJson, response);
+	// 	request->send(200, "application/json", response);
+	// }
+
 	// set coordinate content to 0.0 and 0.0
 	File coordinateFile = SPIFFS.open("/Coordinate.json", "w");
 	JsonDocument coordinateJson;

@@ -307,6 +307,7 @@
 * 400 Bad Request：请求参数不完整或无效。
 * 401 Unauthorized：缺少或提供了无效的身份验证信息。
 * 404 Not Found：请求的资源不存在。
+* 409 Conflict：请求与服务器的当前状态冲突。
 * 415 Unsupported Media Type：不支持请求数据的媒体格式。
 * 500 Internal Server Error：服务器端发生内部错误。
 
@@ -328,5 +329,6 @@
 - 增加了 `/get_EfuseMac`接口的请求示例
 - 更新了 `/get_RA_DEC_Float`、`/get_RA_DEC_HDMS`、`/set_RA_DEC_Float`和 `/set_RA_DEC_HDMS`的相关接口示例
 - 更新了 `/get_TiltFusion`接口示例
-- 增加了一个尚未测试的`void DelayUs(uint64_t us)`，使用了定时器和FreeRTOS的信号机制，理论效果应该是相当于不存在的`vTaskDelayMicroseconds(uint54_t us)`
+- 增加了一个尚未测试的`void DelayUs(uint64_t us)`，使用了定时器和FreeRTOS的信号机制，理论效果应该是相当于不存在的`vTaskDelayMicroseconds(uint32_t us)`
+- 在`/set_status`用注释模拟了一段调用RA和DEC两个电机的方法
   如果还有其他需求或接口说明，请随时调整和完善。

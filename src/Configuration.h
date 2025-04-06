@@ -137,22 +137,22 @@ inline void Initialize_Pin() // This function is used for Initializing
     pinMode(Pin_Stepper_DEC_Step, OUTPUT);
 }
 
-// Beta vTaskDelayMicroseconds
-inline void DelayUs(uint64_t us)
+// Beta vTaskDelayMicroseconds, for better status, us>=100
+inline void DelayUs(uint32_t us)
 {
     TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
 
     esp_timer_handle_t timer;
     esp_timer_create_args_t timerArgs = {
-        .callback = [](void* arg) {
+        .callback = [](void *arg)
+        {
             TaskHandle_t handle = (TaskHandle_t)arg;
             BaseType_t xHigherPriorityTaskWoken = pdFALSE;
             xTaskNotifyGive(handle); // ✅ 非 ISR 中调用 notify，安全
         },
-        .arg = (void*)currentTask,
-        .dispatch_method = ESP_TIMER_TASK,  // ✅ 推荐使用方式，兼容所有 Arduino ESP32 版本
-        .name = "delay_us_task"
-    };
+        .arg = (void *)currentTask,
+        .dispatch_method = ESP_TIMER_TASK, // ✅ 推荐使用方式，兼容所有 Arduino ESP32 版本
+        .name = "delay_us_task"};
     esp_timer_create(&timerArgs, &timer);
     esp_timer_start_once(timer, us);
 
