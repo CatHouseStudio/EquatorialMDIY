@@ -131,11 +131,11 @@ void task_Move_DEC(void *parameters)
     const uint32_t batch_size = 100; // 一次生成的脉冲数量
     if (dir == DIR_INIT)
     {
-        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Initialize_Dir);
+        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Initialize_Dir);
     }
     else
     {
-        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Work_Dir);
+        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Work_Dir);
     }
     switch (mode)
     {
