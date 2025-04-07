@@ -1,5 +1,6 @@
 #pragma once
 #include "SerialMessage.hpp"
+#include <esp_wifi.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
 void WiFi_AP_Init();
@@ -10,6 +11,7 @@ void WiFi_STA_Reboot();
 void WiFi_STA_Init()
 {
     WiFi.mode(WIFI_AP_STA);
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     //! you must change the wifi ssid and passwd
     const char *sta_ssid = "ax3000-818";
     const char *sta_passwd = "fl123456789";
@@ -31,6 +33,8 @@ void WiFi_AP_Init()
 {
     // AP
     // AP mode Ip config
+    WiFi.mode(WIFI_AP);
+    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     IPAddress localIP(192, 168, 4, 1);
     IPAddress gateway(192, 168, 4, 1);
     IPAddress subnet(255, 255, 255, 0);
@@ -56,7 +60,7 @@ void WiFi_AP_Init()
         {
             JsonDocument configJson;
             DeserializationError error = deserializeJson(configJson, configFile);
-            if (error || !configJson["ssid"].is<String>()|| !configJson["pwd"].is<String>())
+            if (error || !configJson["ssid"].is<String>() || !configJson["pwd"].is<String>())
             {
                 xQueueSend(queueHandle_Serial0, &"Invalid Json content, Using default configuration", (TickType_t)0);
                 xQueueSend(queueHandle_Serial0, &"Setting AP (Access Point)…", (TickType_t)0);

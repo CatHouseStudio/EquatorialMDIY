@@ -6,52 +6,86 @@
 // Serial<TWO> PIN: 17(RX),16(TX)
 // Serial<THREE> PIN: 15(RX),14(TX)
 //===================================================================================
-// On Mks Gen Mega2560, 42 Stepper Motor can use three kinds of motor drivers.
+// 42 Stepper Motor(1.8°motor) can use these kinds of motor drivers.
 // 1) DRV8825
 //===================================================================================
-//| 1  | 2  | 3  |                step mode
+//| 1  | 2  | 3  |                Microstep                         |    Steps/rev
 //-----------------------------------------------------------------------------------
-//| 0  | 0  | 0	 | Full step (2-phase excitation) with 71% current  |
+//| 0  | 0  | 0	 | Full step (2-phase excitation) with 71% current  |       200
 //-----------------------------------------------------------------------------------
-//| 1  | 0  | 0  |      1/2 step (1-2 phase excitation)             |
+//| 1  | 0  | 0  |          2 microsteps (1-2 phase excitation)     |       400
 //-----------------------------------------------------------------------------------
-//| 0  | 1  | 0  |      1/4 step (W1-2 phase excitation)            |
+//| 0  | 1  | 0  |          4 microsteps (W1-2 phase excitation)    |       800
 //-----------------------------------------------------------------------------------
-//| 1  | 1  | 0  |         8 microsteps/step                        |
+//| 1  | 1  | 0  |              8 microsteps                        |       1600
 //-----------------------------------------------------------------------------------
-//| 0  | 0  | 1  |         16 microsteps/step                       |
+//| 0  | 0  | 1  |              16 microsteps                       |       3200
 //-----------------------------------------------------------------------------------
-//| 1  | 0  | 1  |         32 microsteps/step                       |
+//| 1  | 0  | 1  |              32 microsteps                       |       6400
 //-----------------------------------------------------------------------------------
-//| 0  | 1  | 1  |         32 microsteps/step                       |
+//| 0  | 1  | 1  |              32 microsteps                       |       6400
 //-----------------------------------------------------------------------------------
-//| 1  | 1  | 1  |         32 microsteps/step                       |
+//| 1  | 1  | 1  |              32 microsteps                       |       6400
 //===================================================================================
 // 2) A4988
 //===================================================================================
-//| 1  | 2  | 3  |                step mode                         |
+//| 1  | 2  | 3  |                Microstep                         |    Steps/rev
 //-----------------------------------------------------------------------------------
-//| 0  | 0  | 0  |                Full step                         |
+//| 0  | 0  | 0  |                Full step                         |       200
 //-----------------------------------------------------------------------------------
-//| 1  | 0  | 0  |                1/2 step                          |
+//| 1  | 0  | 0  |              2 microsteps                        |       400
 //-----------------------------------------------------------------------------------
-//| 0  | 1  | 0  |                1/4 step                          |
+//| 0  | 1  | 0  |              4 microsteps                        |       800
 //-----------------------------------------------------------------------------------
-//| 1  | 1  | 0  |              8 microsteps/step                   |
+//| 1  | 1  | 0  |              8 microsteps                        |       1600
 //-----------------------------------------------------------------------------------
-//| 1  | 1  | 1  |              16 microsteps/step                  |
+//| 1  | 1  | 1  |              16 microsteps                       |       3200
 //===================================================================================
 // 3) TMC 2208
-//| 1  | 2  | 3  |                step mode                         |
+//| 1  | 2  | 3  |                Microstep                         |    Steps/rev
 //-----------------------------------------------------------------------------------
-//| 1  | 0  | 0  |                  2 step                          |
+//| 1  | 0  | 0  |              2 microsteps                        |       200
 //-----------------------------------------------------------------------------------
-//| 0  | 1  | 0  |                  4 step                          |
+//| 0  | 1  | 0  |              4 microsteps                        |       400
 //-----------------------------------------------------------------------------------
-//| 0  | 0  | 0  |                  8 step                          |
+//| 0  | 0  | 0  |              8 microsteps                        |       800
 //-----------------------------------------------------------------------------------
-//| 1  | 1  | 0  |                  16 step                         |
+//| 1  | 1  | 0  |              16 microsteps                       |       1600
 //===================================================================================
+// 4) DM542C SW1,SW2,SW3 for Dynamic Current SW4,SW5,SW6,SW7 for Microstep Resolution
+//| 4  | 5  | 6  | 7  |                Microstep                    |    Steps/rev
+//-----------------------------------------------------------------------------------
+//| 0  | 1  | 1  | 1  |                  2 microsteps               |       400
+//-----------------------------------------------------------------------------------
+//| 1  | 0  | 1  | 1  |                  4 microsteps               |       800
+//-----------------------------------------------------------------------------------
+//| 0  | 0  | 1  | 1  |                  8 microsteps               |       1600
+//-----------------------------------------------------------------------------------
+//| 1  | 1  | 0  | 1  |                  16 microsteps              |       3200
+//-----------------------------------------------------------------------------------
+//| 0  | 1  | 0  | 1  |                  32 microsteps              |       6400
+//-----------------------------------------------------------------------------------
+//| 1  | 0  | 0  | 1  |                  64 microsteps              |       12800
+//-----------------------------------------------------------------------------------
+//| 0  | 0  | 0  | 1  |                  128 microsteps             |       25600
+//-----------------------------------------------------------------------------------
+//| 1  | 1  | 1  | 0  |                  5 microsteps               |       1000
+//-----------------------------------------------------------------------------------
+//| 0  | 1  | 1  | 0  |                  10 microsteps              |       2000
+//-----------------------------------------------------------------------------------
+//| 1  | 0  | 1  | 0  |                  20 microsteps              |       4000
+//-----------------------------------------------------------------------------------
+//| 0  | 0  | 1  | 0  |                  25 microsteps              |       5000
+//-----------------------------------------------------------------------------------
+//| 1  | 1  | 0  | 0  |                  40 microsteps              |       8000
+//-----------------------------------------------------------------------------------
+//| 0  | 1  | 0  | 0  |                  50 microsteps              |       10000
+//-----------------------------------------------------------------------------------
+//| 1  | 0  | 0  | 0  |                  100 microsteps             |       20000
+//-----------------------------------------------------------------------------------
+//| 0  | 0  | 0  | 0  |                  125 microsteps             |       25000
+//===================================================================================
+
 // More information can be found on https://reprap.org/wiki/MKS_GEN#Motor_Driver
 //===================================================================================
 // Thanks to the MKS.
@@ -63,20 +97,17 @@
 // ================================================
 
 // Set the Stepper Motors' PIN.
-// Equator Stepper
-// TODO you must change the pin value
-const uint8_t Pin_Stepper_Equator_Dir = 33;
-const uint8_t Pin_Stepper_Equator_Step = 25;
 
 // Celestial Stepper
 // TODO you must change the pin value
-// Horizontal Stepper
-const uint8_t Pin_Stepper_Horizontal_Dir = 33;
-const uint8_t Pin_Stepper_Horizontal_Step = 25;
+// In this case, you should connect the pin of enable to gnd.
+// RA Stepper
+const uint8_t Pin_Stepper_RA_Dir = 33;
+const uint8_t Pin_Stepper_RA_Step = 25;
 
-// Vertical Stepper
-const uint8_t Pin_Stepper_Vertical_Dir = 26;
-const uint8_t Pin_Stepper_Vertical_Step = 27;
+// DEC Stepper
+const uint8_t Pin_Stepper_DEC_Dir = 26;
+const uint8_t Pin_Stepper_DEC_Step = 27;
 
 // =============================================
 // Set the Serials' Bit rate
@@ -86,38 +117,47 @@ const uint8_t Pin_Serial_GPS_RX = 16;
 const uint8_t Pin_Serial_GPS_TX = 17;
 const unsigned long Serial_GPS_Bit_Rate = 4800;
 
-// Set the Stepper Motors' Parameter.
-// Equator Stepper
-const uint8_t Stepper_Equator_Initialize_Dir = HIGH;
-const uint8_t Stepper_Equator_Work_Dir = LOW;
-const uint8_t Stepper_Equator_Freq = 74; // 74Hz
-const uint8_t Stepper_Equator_Channel = 0;
-const uint8_t Stepper_Equator_resolution = 8;
-const uint8_t Stepper_Equator_dutyCycle = 128;
-// * Stepper Motor Status
-const uint8_t Stepper_Equator_Status_Clockwise = 0;
-const uint8_t Stepper_Equator_Status_CounterClockwise = 1;
-const uint8_t Stepper_Equator_Status_Stop = 2;
-
-// Horizontal Stepper
-const uint8_t Stepper_Horizontal_Initialize_Dir = HIGH;
-const uint8_t Stepper_Horizontal_Work_Dir = LOW;
-const uint32_t Stepper_Horizontal_DelayMs = 250;
-const float Stepper_Horizontal_K = 114514; // Mechanical structure reduction ratio coefficient
-// Vertical Stepper
-const uint8_t Stepper_Vertical_Initialize_Dir = HIGH;
-const uint8_t Stepper_Vertical_Work_Dir = LOW;
-const uint32_t Stepper_Vertical_DelayMs = 250;
-const float Stepper_Vertical_K = 114514; // Mechanical structure reduction ratio coefficient
+// RA Stepper
+const uint8_t Stepper_RA_Initialize_Dir = HIGH;
+const uint8_t Stepper_RA_Work_Dir = LOW;
+const uint32_t Stepper_RA_DelayMs = 250;
+const float Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
+// DEC Stepper
+const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
+const uint8_t Stepper_DEC_Work_Dir = LOW;
+const uint32_t Stepper_DEC_DelayMs = 250;
+const float Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
-    // Equator Stepper
-    pinMode(Pin_Stepper_Equator_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Equator_Step, OUTPUT);
-    pinMode(Pin_Stepper_Horizontal_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Horizontal_Step, OUTPUT);
-    pinMode(Pin_Stepper_Vertical_Dir, OUTPUT);
-    pinMode(Pin_Stepper_Vertical_Step, OUTPUT);
+    // Stepper
+    pinMode(Pin_Stepper_RA_Dir, OUTPUT);
+    pinMode(Pin_Stepper_RA_Step, OUTPUT);
+    pinMode(Pin_Stepper_DEC_Dir, OUTPUT);
+    pinMode(Pin_Stepper_DEC_Step, OUTPUT);
+}
 
+// Beta vTaskDelayMicroseconds, for better status, us>=100
+inline void DelayUs(uint32_t us)
+{
+    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
+
+    esp_timer_handle_t timer;
+    esp_timer_create_args_t timerArgs = {
+        .callback = [](void *arg)
+        {
+            TaskHandle_t handle = (TaskHandle_t)arg;
+            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+            xTaskNotifyGive(handle); // ✅ 非 ISR 中调用 notify，安全
+        },
+        .arg = (void *)currentTask,
+        .dispatch_method = ESP_TIMER_TASK, // ✅ 推荐使用方式，兼容所有 Arduino ESP32 版本
+        .name = "delay_us_task"};
+    esp_timer_create(&timerArgs, &timer);
+    esp_timer_start_once(timer, us);
+
+    // 当前任务进入等待
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    esp_timer_delete(timer);
 }

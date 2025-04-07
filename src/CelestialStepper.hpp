@@ -1,96 +1,175 @@
 #pragma once
 #include "Configuration.h"
+#include "CelestialPositioning.hpp"
 
-int64_t Pluse_Horizontal(float azimuth);
-int64_t Pluse_Vertical(float altitude);
+enum MoveMode
+{
+    MODE_POSITION,  // 有限步数
+    MODE_CONTINUOUS // 持续运行
+};
 
-static TaskHandle_t xTaskHandle_Move_Horizontal = NULL;
-static TaskHandle_t xTaskHandle_Move_Vertical = NULL;
+enum StepperDirection
+{
+    DIR_INIT,
+    DIR_WORK
+};
 
-void task_Move_Horizontal(void *parameters);
-void task_Move_Vertical(void *parameters);
+struct MoveCommand
+{
+    MoveMode mode;
+    StepperDirection dir;
+    uint32_t pulse_count;
+    uint32_t delay_us;
+};
+
+uint32_t Pulse_RA(float azimuth);
+uint32_t Pulse_DEC(float altitude);
+
+static TaskHandle_t xTaskHandle_Move_RA = NULL;
+static TaskHandle_t xTaskHandle_Move_DEC = NULL;
+
+void task_Move_RA(void *parameters);
+void task_Move_DEC(void *parameters);
 
 // 相对位置偏移运动量计算
-// 水平运动量计算
-int64_t Pluse_Horizontal(float azimuth)
+
+uint32_t Pulse_RA(float ra)
 {
     // TODO Depend on Mechanical structure reduction ratio coefficient
-    return (uint64_t)(azimuth * Stepper_Horizontal_K);
+    return (uint32_t)(ra * Stepper_RA_K);
 }
-// 垂直运动量计算
-int64_t Pluse_Vertical(float altitude)
+
+uint32_t Pulse_DEC(float dec)
 {
     // TODO Depend on Mechanical structure reduction ratio coefficient
-    return (int64_t)(altitude * Stepper_Vertical_K);
+    return (uint32_t)(dec * Stepper_DEC_K);
 }
 
 // configMAX_PRIORITIES - 3
-void task_Move_Horizontal(void *parameters)
+
+// To call this task, you should use pvPortMalloc to malloc mem on heap
+void task_Move_RA(void *parameters)
 {
-    int64_t pulse_count = (int64_t)parameters;
+    // MoveCommand *cmd =(MoveCommand*)pvPortMalloc(sizeof(MoveCommand));
+    // cmd->mode = MODE_CONTINUOUS;
+    // cmd->dir = DIR_WORK
+    // cmd->pulse_count = 1;          // only use under MODE_POSITION
+    // cmd->delay_us = 187500;        // only use under MODE_CONTINUOUS
+    // xTaskCreate(task_Move_RA, "Move RA", 2048, cmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
+    MoveCommand *cmd = (MoveCommand *)parameters;
+    MoveMode mode = cmd->mode;
+    StepperDirection dir = cmd->dir;
+    uint32_t pulse_count = cmd->pulse_count;
+    uint32_t delay_us = cmd->delay_us;
+    vPortFree(parameters);
+
     uint32_t pulse_generated = 0;
     const uint32_t batch_size = 100; // 一次生成的脉冲数量
-    if (pulse_count < 0)
+    if (dir == DIR_INIT)
     {
-        digitalWrite(Pin_Stepper_Horizontal_Dir, Stepper_Horizontal_Initialize_Dir);
+        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Initialize_Dir);
     }
     else
     {
-        digitalWrite(Pin_Stepper_Horizontal_Dir, Stepper_Horizontal_Work_Dir);
+        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Work_Dir);
     }
-    while (pulse_generated < pulse_count)
+    switch (mode)
     {
-        for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+    case MODE_CONTINUOUS:
+        for (;;)
         {
-            // 设置引脚为高电平
-            digitalWrite(Pin_Stepper_Horizontal_Step, HIGH);
-            delayMicroseconds(Stepper_Horizontal_DelayMs);
-
-            // 设置引脚为低电平
-            digitalWrite(Pin_Stepper_Horizontal_Step, LOW);
-            delayMicroseconds(Stepper_Horizontal_DelayMs);
-
-            pulse_generated++;
+            digitalWrite(Pin_Stepper_RA_Step, HIGH);
+            DelayUs(delay_us);
+            digitalWrite(Pin_Stepper_RA_Step, LOW);
+            DelayUs(delay_us);
         }
+        break;
 
-        // 让出CPU时间片，防止阻塞其他任务
-        vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
+    case MODE_POSITION:
+        while (pulse_generated < pulse_count)
+        {
+            for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+            {
+                // 设置引脚为高电平
+                digitalWrite(Pin_Stepper_RA_Step, HIGH);
+                DelayUs(Stepper_RA_DelayMs);
+
+                // 设置引脚为低电平
+                digitalWrite(Pin_Stepper_RA_Step, LOW);
+                DelayUs(Stepper_RA_DelayMs);
+
+                pulse_generated++;
+            }
+
+            // 让出CPU时间片，防止阻塞其他任务
+            vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
+        }
+        break;
     }
-    vTaskDelete(xTaskHandle_Move_Horizontal);
-    xTaskHandle_Move_Horizontal = NULL;
+
+    xTaskHandle_Move_RA = NULL;
+    vTaskDelete(NULL);
 }
 // configMAX_PRIORITIES - 3
-void task_Move_Vertical(void *parameters)
+// To call this task, you should use pvPortMalloc to malloc mem on heap
+void task_Move_DEC(void *parameters)
 {
-    int64_t pulse_count = (int64_t)parameters;
+    // MoveCommand *cmd =(MoveCommand*)pvPortMalloc(sizeof(MoveCommand));
+    // cmd->mode = MODE_CONTINUOUS;
+    // cmd->dir = DIR_WORK
+    // cmd->pulse_count = 1;          // only use under MODE_POSITION
+    // cmd->delay_us = 187500;        // only use under MODE_CONTINUOUS
+    // xTaskCreate(task_Move_RA, "Move RA", 2048, cmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
+    MoveCommand *cmd = (MoveCommand *)parameters;
+    MoveMode mode = cmd->mode;
+    StepperDirection dir = cmd->dir;
+    uint32_t pulse_count = cmd->pulse_count;
+    uint32_t delay_us = cmd->delay_us;
+    vPortFree(parameters);
+
     uint32_t pulse_generated = 0;
     const uint32_t batch_size = 100; // 一次生成的脉冲数量
-    if (pulse_count < 0)
+    if (dir == DIR_INIT)
     {
-        digitalWrite(Pin_Stepper_Vertical_Dir, Stepper_Vertical_Initialize_Dir);
+        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Initialize_Dir);
     }
     else
     {
-        digitalWrite(Pin_Stepper_Vertical_Dir, Stepper_Vertical_Work_Dir);
+        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Work_Dir);
     }
-    while (pulse_generated < pulse_count)
+    switch (mode)
     {
-        for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+    case MODE_CONTINUOUS:
+        for (;;)
         {
-            // 设置引脚为高电平
-            digitalWrite(Pin_Stepper_Vertical_Step, HIGH);
-            delayMicroseconds(Stepper_Vertical_DelayMs);
-
-            // 设置引脚为低电平
-            digitalWrite(Pin_Stepper_Vertical_Step, LOW);
-            delayMicroseconds(Stepper_Vertical_DelayMs);
-
-            pulse_generated++;
+            digitalWrite(Pin_Stepper_DEC_Step, HIGH);
+            DelayUs(delay_us);
+            digitalWrite(Pin_Stepper_DEC_Step, LOW);
+            DelayUs(delay_us);
         }
+        break;
+    case MODE_POSITION:
+        while (pulse_generated < pulse_count)
+        {
+            for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+            {
+                // 设置引脚为高电平
+                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
+                DelayUs(Stepper_DEC_DelayMs);
 
-        // 让出CPU时间片，防止阻塞其他任务
-        vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
+                // 设置引脚为低电平
+                digitalWrite(Pin_Stepper_DEC_Step, LOW);
+                DelayUs(Stepper_DEC_DelayMs);
+
+                pulse_generated++;
+            }
+
+            // 让出CPU时间片，防止阻塞其他任务
+            vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
+        }
+        break;
     }
-    vTaskDelete(xTaskHandle_Move_Vertical);
-    xTaskHandle_Move_Vertical = NULL;
+
+    xTaskHandle_Move_DEC = NULL;
+    vTaskDelete(NULL);
 }
