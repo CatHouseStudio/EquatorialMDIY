@@ -2,10 +2,18 @@
 #include "Configuration.h"
 #include "CelestialPositioning.hpp"
 
-enum MoveMode
+// State Machine
+enum StepperState
 {
-    MODE_POSITION,  // 有限步数
-    MODE_CONTINUOUS // 持续运行
+    STEPPER_IDLE,
+    STEPPER_RUNNING
+};
+
+enum MoveAction
+{
+    ACTION_POSITION,   // 有限步数
+    ACTION_CONTINUOUS, // 持续运行
+    ACTION_STOP        // 中断当前运行, 这边判断用notify而不是cmd
 };
 
 enum StepperDirection
@@ -16,7 +24,7 @@ enum StepperDirection
 
 struct MoveCommand
 {
-    MoveMode mode;
+    MoveAction action;
     StepperDirection dir;
     uint32_t pulse_count;
     uint32_t delay_us;
@@ -25,11 +33,32 @@ struct MoveCommand
 uint32_t Pulse_RA(float azimuth);
 uint32_t Pulse_DEC(float altitude);
 
-static TaskHandle_t xTaskHandle_Move_RA = NULL;
-static TaskHandle_t xTaskHandle_Move_DEC = NULL;
+static QueueHandle_t queueHandle_Stepper_RA = NULL;
+static QueueHandle_t queueHandle_Stepper_DEC = NULL;
 
-void task_Move_RA(void *parameters);
-void task_Move_DEC(void *parameters);
+static TaskHandle_t xTaskHandle_Stepper_RA = NULL;
+static TaskHandle_t xTaskHandle_Stepper_DEC = NULL;
+
+static bool is_RA_running = false;
+static bool is_DEC_running = false;
+
+bool Is_Stepper_RA_running();
+bool Is_Stepper_DEC_running();
+
+bool Stepper_RA_TrySendCommand(const MoveCommand *cmd);
+bool Stepper_DEC_TrySendCommand(const MoveCommand *cmd);
+
+void Stepper_RA_Stop();
+void Stepper_DEC_Stop();
+
+void set_Stepper_RA_running(bool state);
+void set_Stepper_DEC_running(bool state);
+
+static SemaphoreHandle_t semphr_Stepper_RA_Mutex = NULL;
+static SemaphoreHandle_t semphr_Stepper_DEC_Mutex = NULL;
+
+void task_Stepper_RA(void *parameters);
+void task_Stepper_DEC(void *parameters);
 
 // 相对位置偏移运动量计算
 
@@ -47,129 +76,183 @@ uint32_t Pulse_DEC(float dec)
 
 // configMAX_PRIORITIES - 3
 
-// To call this task, you should use pvPortMalloc to malloc mem on heap
-void task_Move_RA(void *parameters)
+void task_Stepper_RA(void *parameters)
 {
-    // MoveCommand *cmd =(MoveCommand*)pvPortMalloc(sizeof(MoveCommand));
-    // cmd->mode = MODE_CONTINUOUS;
-    // cmd->dir = DIR_WORK
-    // cmd->pulse_count = 1;          // only use under MODE_POSITION
-    // cmd->delay_us = 187500;        // only use under MODE_CONTINUOUS
-    // xTaskCreate(task_Move_RA, "Move RA", 2048, cmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
-    MoveCommand *cmd = (MoveCommand *)parameters;
-    MoveMode mode = cmd->mode;
-    StepperDirection dir = cmd->dir;
-    uint32_t pulse_count = cmd->pulse_count;
-    uint32_t delay_us = cmd->delay_us;
-    vPortFree(parameters);
-
-    uint32_t pulse_generated = 0;
-    const uint32_t batch_size = 100; // 一次生成的脉冲数量
-    if (dir == DIR_INIT)
+    queueHandle_Stepper_RA = xQueueCreate(1, sizeof(MoveCommand));
+    xTaskHandle_Stepper_RA = xTaskGetCurrentTaskHandle();
+    MoveCommand cmd;
+    for (;;)
     {
-        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Initialize_Dir);
-    }
-    else
-    {
-        digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Work_Dir);
-    }
-    switch (mode)
-    {
-    case MODE_CONTINUOUS:
-        for (;;)
+        if (xQueueReceive(queueHandle_Stepper_RA, &cmd, portMAX_DELAY) == pdPASS)
         {
-            digitalWrite(Pin_Stepper_RA_Step, HIGH);
-            DelayUs(delay_us);
-            digitalWrite(Pin_Stepper_RA_Step, LOW);
-            DelayUs(delay_us);
-        }
-        break;
-
-    case MODE_POSITION:
-        while (pulse_generated < pulse_count)
-        {
-            for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+            // ACTION_STOP use notify, not normal CMD
+            if (cmd.action != ACTION_POSITION && cmd.action != ACTION_CONTINUOUS)
             {
-                // 设置引脚为高电平
+                continue;
+            }
+            set_Stepper_RA_running(true);
+            // CONTINUOUS or POSITION
+            if (cmd.dir == DIR_INIT)
+            {
+                digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Initialize_Dir);
+            }
+            else
+            {
+                digitalWrite(Pin_Stepper_RA_Dir, Stepper_RA_Work_Dir);
+            }
+
+            uint32_t notifyValue = 0;
+
+            while (cmd.action == ACTION_CONTINUOUS)
+            {
+                if (xTaskNotifyWait(0, 0xFFFFFFFF, &notifyValue, 0) == pdPASS && notifyValue == ACTION_STOP)
+                { // We got a ACTION_STOP notify!
+                    break;
+                }
+                digitalWrite(Pin_Stepper_RA_Step, HIGH);
+                DelayUs(cmd.delay_us);
+                digitalWrite(Pin_Stepper_RA_Step, LOW);
+                DelayUs(cmd.delay_us);
+            }
+
+            uint32_t i = 0;
+            while (cmd.action == ACTION_POSITION && i < cmd.pulse_count)
+            {
+                if (xTaskNotifyWait(0, 0xFFFFFFFF, &notifyValue, 0) == pdPASS && notifyValue == ACTION_STOP)
+                { // We got a ACTION_STOP notify!
+                    break;
+                }
                 digitalWrite(Pin_Stepper_RA_Step, HIGH);
                 DelayUs(Stepper_RA_DelayMs);
-
-                // 设置引脚为低电平
                 digitalWrite(Pin_Stepper_RA_Step, LOW);
                 DelayUs(Stepper_RA_DelayMs);
-
-                pulse_generated++;
+                ++i;
             }
-
-            // 让出CPU时间片，防止阻塞其他任务
-            vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
+            xTaskNotifyStateClear(NULL);
+            set_Stepper_RA_running(false);
         }
-        break;
     }
-
-    xTaskHandle_Move_RA = NULL;
-    vTaskDelete(NULL);
 }
 // configMAX_PRIORITIES - 3
-// To call this task, you should use pvPortMalloc to malloc mem on heap
-void task_Move_DEC(void *parameters)
+void task_Stepper_DEC(void *parameters)
 {
-    // MoveCommand *cmd =(MoveCommand*)pvPortMalloc(sizeof(MoveCommand));
-    // cmd->mode = MODE_CONTINUOUS;
-    // cmd->dir = DIR_WORK
-    // cmd->pulse_count = 1;          // only use under MODE_POSITION
-    // cmd->delay_us = 187500;        // only use under MODE_CONTINUOUS
-    // xTaskCreate(task_Move_RA, "Move RA", 2048, cmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
-    MoveCommand *cmd = (MoveCommand *)parameters;
-    MoveMode mode = cmd->mode;
-    StepperDirection dir = cmd->dir;
-    uint32_t pulse_count = cmd->pulse_count;
-    uint32_t delay_us = cmd->delay_us;
-    vPortFree(parameters);
-
-    uint32_t pulse_generated = 0;
-    const uint32_t batch_size = 100; // 一次生成的脉冲数量
-    if (dir == DIR_INIT)
+    queueHandle_Stepper_DEC = xQueueCreate(1, sizeof(MoveCommand));
+    xTaskHandle_Stepper_DEC = xTaskGetCurrentTaskHandle();
+    MoveCommand cmd;
+    for (;;)
     {
-        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Initialize_Dir);
-    }
-    else
-    {
-        digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Work_Dir);
-    }
-    switch (mode)
-    {
-    case MODE_CONTINUOUS:
-        for (;;)
+        if (xQueueReceive(queueHandle_Stepper_DEC, &cmd, portMAX_DELAY) == pdPASS)
         {
-            digitalWrite(Pin_Stepper_DEC_Step, HIGH);
-            DelayUs(delay_us);
-            digitalWrite(Pin_Stepper_DEC_Step, LOW);
-            DelayUs(delay_us);
-        }
-        break;
-    case MODE_POSITION:
-        while (pulse_generated < pulse_count)
-        {
-            for (uint32_t i = 0; i < batch_size && pulse_generated < pulse_count; ++i)
+            // ACTION_STOP use notify, not normal CMD
+            if (cmd.action != ACTION_POSITION && cmd.action != ACTION_CONTINUOUS)
             {
-                // 设置引脚为高电平
-                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
-                DelayUs(Stepper_DEC_DelayMs);
-
-                // 设置引脚为低电平
-                digitalWrite(Pin_Stepper_DEC_Step, LOW);
-                DelayUs(Stepper_DEC_DelayMs);
-
-                pulse_generated++;
+                continue;
+            }
+            set_Stepper_DEC_running(true);
+            // CONTINUOUS or POSITION
+            if (cmd.dir == DIR_INIT)
+            {
+                digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Initialize_Dir);
+            }
+            else
+            {
+                digitalWrite(Pin_Stepper_DEC_Dir, Stepper_DEC_Work_Dir);
             }
 
-            // 让出CPU时间片，防止阻塞其他任务
-            vTaskDelay(pdMS_TO_TICKS(1)); // 每批脉冲后延迟1毫秒
-        }
-        break;
-    }
+            uint32_t notifyValue = 0;
 
-    xTaskHandle_Move_DEC = NULL;
-    vTaskDelete(NULL);
+            while (cmd.action == ACTION_CONTINUOUS)
+            {
+                if (xTaskNotifyWait(0, 0xFFFFFFFF, &notifyValue, 0) == pdPASS && notifyValue == ACTION_STOP)
+                { // We got a ACTION_STOP notify!
+                    break;
+                }
+                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
+                DelayUs(cmd.delay_us);
+                digitalWrite(Pin_Stepper_DEC_Step, LOW);
+                DelayUs(cmd.delay_us);
+            }
+
+            uint32_t i = 0;
+            while (cmd.action == ACTION_POSITION && i < cmd.pulse_count)
+            {
+                if (xTaskNotifyWait(0, 0xFFFFFFFF, &notifyValue, 0) == pdPASS && notifyValue == ACTION_STOP)
+                { // We got a ACTION_STOP notify!
+                    break;
+                }
+                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
+                DelayUs(Stepper_DEC_DelayMs);
+                digitalWrite(Pin_Stepper_DEC_Step, LOW);
+                DelayUs(Stepper_DEC_DelayMs);
+                ++i;
+            }
+            xTaskNotifyStateClear(NULL);
+            set_Stepper_DEC_running(false);
+        }
+    }
+}
+
+bool Is_Stepper_RA_running()
+{
+    bool result = false;
+    if (xSemaphoreTake(semphr_Stepper_RA_Mutex, portMAX_DELAY))
+    {
+        result = is_RA_running;
+        xSemaphoreGive(semphr_Stepper_RA_Mutex);
+    }
+    return result;
+}
+bool Is_Stepper_DEC_running()
+{
+    bool result = false;
+    if (xSemaphoreTake(semphr_Stepper_DEC_Mutex, portMAX_DELAY))
+    {
+        result = is_DEC_running;
+        xSemaphoreGive(semphr_Stepper_DEC_Mutex);
+    }
+    return result;
+}
+
+void set_Stepper_RA_running(bool state)
+{
+    if (xSemaphoreTake(semphr_Stepper_RA_Mutex, portMAX_DELAY))
+    {
+        is_RA_running = state;
+        xSemaphoreGive(semphr_Stepper_RA_Mutex);
+    }
+}
+void set_Stepper_DEC_running(bool state)
+{
+    if (xSemaphoreTake(semphr_Stepper_DEC_Mutex, portMAX_DELAY))
+    {
+        is_DEC_running = state;
+        xSemaphoreGive(semphr_Stepper_DEC_Mutex);
+    }
+}
+bool Stepper_RA_TrySendCommand(const MoveCommand *cmd)
+{
+    if (Is_Stepper_RA_running())
+    {
+        // task is running, can not send command
+        return false;
+    }
+    return xQueueSend(queueHandle_Stepper_RA, cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
+}
+bool Stepper_DEC_TrySendCommand(const MoveCommand *cmd)
+{
+    if (Is_Stepper_DEC_running())
+    {
+        // task is running, can not send command
+        return false;
+    }
+    return xQueueSend(queueHandle_Stepper_DEC, cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
+}
+
+void Stepper_RA_Stop()
+{
+    xTaskNotify(xTaskHandle_Stepper_RA, ACTION_STOP, eSetValueWithOverwrite);
+}
+void Stepper_DEC_Stop()
+{
+    xTaskNotify(xTaskHandle_Stepper_DEC, ACTION_STOP, eSetValueWithOverwrite);
 }

@@ -295,67 +295,54 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data) // POST http
 	uint32_t pulse_count = Pulse_DEC(123.456); // just one fake number to test
 
 	// For Example if you want to call task_MOVE_RA and task_Move_DEC, you can do things like these.
-	// if (xTaskHandle_Move_DEC == NULL)
-	// {
-	// 	MoveCommand *deccmd = (MoveCommand *)pvPortMalloc(sizeof(MoveCommand));
-	// 	if (!deccmd)
-	// 	{
-	// 		JsonDocument respJson;
-	// 		respJson["status"] = "Memory allocation failed";
-	// 		String response;
-	// 		serializeJson(respJson, response);
-	// 		request->send(200, "application/json", response);
-	// 	}
-	// 	deccmd->mode = MODE_POSITION;
-	// 	deccmd->dir = DIR_WORK;
-	// 	deccmd->pulse_count = pulse_count; // Just like use the real pulse_count from Pulse_DEC();
-	// 	deccmd->delay_us = 7355608;		   // under MODE_POSITION, the delay_us is meaningless
-	// 	xTaskCreate(task_Move_DEC, "Move DEC", configMINIMAL_STACK_SIZE + 2048, deccmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_DEC);
-	// 	JsonDocument respJson;
-	// 	respJson["status"] = "DEC move started";
-	// 	String response;
-	// 	serializeJson(respJson, response);
-	// 	request->send(200, "application/json", response);
-	// }
-	// else
-	// {
-	// 	JsonDocument respJson;
-	// 	respJson["status"] = "DEC motor is already running";
-	// 	String response;
-	// 	serializeJson(respJson, response);
-	// 	request->send(200, "application/json", response);
-	// }
+	// cmd from deserializeJson
+	/*
+	MoveCommand raCmd = {
+		.action = ACTION_CONTINUOUS,
+		.dir = DIR_WORK,
+		.pulse_count = 0,	// under ACTION_CONTINUOUS, the pulse_count is meaningless
+		.delay_us = 7355608 // just one fake number to test
+	};
+	JsonDocument respJson;
+	if (!Stepper_RA_TrySendCommand(&raCmd))
+	{
+		respJson["status"] = "RA move started";
+	}
+	else
+	{
+		respJson["status"] = "RA motor is already running";
+	}
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
 
-	// if (xTaskHandle_Move_RA == NULL)
-	// {
-	// 	// the ra motor is stop
-	// 	MoveCommand *racmd = (MoveCommand *)pvPortMalloc(sizeof(MoveCommand));
-	// 	if(!racmd){
-	// 		JsonDocument respJson;
-	// 		respJson["status"] = "Memory allocation failed";
-	// 		String response;
-	// 		serializeJson(respJson, response);
-	// 		request->send(200, "application/json", response);
-	// 	}
-	// 	racmd->mode = MODE_CONTINUOUS;
-	// 	racmd->dir = DIR_WORK;
-	// 	racmd->pulse_count = 0;	   // under MODE_CONTINUOUS, the pulse_count is meaningless
-	// 	racmd->delay_us = 7355608; // just one fake number to test
-	// 	xTaskCreate(task_Move_RA, "Move RA", configMINIMAL_STACK_SIZE + 2048, racmd, configMAX_PRIORITIES - 3, &xTaskHandle_Move_RA);
-	// 	JsonDocument respJson;
-	// 	respJson["status"] = "RA move started";
-	// 	String response;
-	// 	serializeJson(respJson, response);
-	// 	request->send(200, "application/json", response);
-	// }
-	// else
-	// {
-	// 	JsonDocument respJson;
-	// 	respJson["status"] = "RA motor is already running";
-	// 	String response;
-	// 	serializeJson(respJson, response);
-	// 	request->send(200, "application/json", response);
-	// }
+	MoveCommand decCmd = {
+		.action = ACTION_POSITION,
+		.dir = DIR_WORK,
+		.pulse_count = pulse_count, // Just like use the real pulse_count from Pulse_DEC();
+		.delay_us = 7355608			// under ACTION_POSITION, the delay_us is meaningless
+	};
+	JsonDocument respJson;
+	if (!Stepper_RA_TrySendCommand(&decCmd))
+	{
+		respJson["status"] = "DEC move started";
+	}
+	else
+	{
+		respJson["status"] = "DE C motor is already running";
+	}
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+	*/
+
+	// For Example if you want to stop stepper, you can do things like these.
+	// cmd from deserializeJson
+	/*
+		if cmd.action==ACTION_STOP
+			Stepper_RA_Stop();
+			Stepper_RA_Stop();
+	*/
 
 	// set coordinate content to 0.0 and 0.0
 	File coordinateFile = SPIFFS.open("/Coordinate.json", "w");

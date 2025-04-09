@@ -29,6 +29,20 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer);
+    xTaskCreate(
+        task_Stepper_RA,
+        "Task Stepper RA",
+        configMINIMAL_STACK_SIZE + 4096,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        NULL);
+    xTaskCreate(
+        task_Stepper_DEC,
+        "Task Stepper DEC",
+        configMINIMAL_STACK_SIZE + 4096,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        NULL);
     // xTaskCreate(
     //     task_TiltFusion,
     //     "Enable TiltFusion MPU6050",
