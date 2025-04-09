@@ -37,7 +37,7 @@ TinyGPSPlus gps;
 
 GPSInfo gps_info;
 // Semaphore Mutex lock
-SemaphoreHandle_t semphr_gps_info_Mutex;
+SemaphoreHandle_t semphr_gps_info_Mutex = NULL;
 
 void task_GPSInfo(void *parameter);
 
@@ -59,8 +59,6 @@ void task_GPSInfo(void *parameter)
                     // Make sure info is valid
                     if (gps.location.isValid() && gps.date.isValid() && gps.time.isValid())
                     {
-                        char message_Date_Time[Max_Message_Length];
-                        char message_Position[Max_Message_Length];
                         gps_info.latitude = gps.location.lat();
                         gps_info.longitude = gps.location.lng();
                         gps_info.year = gps.date.year();
@@ -71,10 +69,8 @@ void task_GPSInfo(void *parameter)
                         gps_info.second = gps.time.second();
                         const char *monthAbbrev = getMonthAbbreviation(gps_info.month);
                         // YYYY MM DD HH:MM:SS
-                        snprintf(message_Date_Time, Max_Message_Length, "Now Date and Time: %u/%s/%02u %02u:%02u:%02u\n", gps_info.year, monthAbbrev, gps_info.day, gps_info.hour, gps_info.minute, gps_info.second);
-                        xQueueSend(queueHandle_Serial0, &message_Date_Time, (TickType_t)0);
-                        snprintf(message_Position, Max_Message_Length, "Now latitude and longitude: %.9f, %.9f", gps_info.latitude, gps_info.longitude);
-                        xQueueSend(queueHandle_Serial0, &message_Position, (TickType_t)0);
+                        Serial0_Printf("Now Date and Time: %u/%s/%02u %02u:%02u:%02u\n", gps_info.year, monthAbbrev, gps_info.day, gps_info.hour, gps_info.minute, gps_info.second);
+                        Serial0_Printf("Now latitude and longitude: %.9f, %.9f", gps_info.latitude, gps_info.longitude);
                         // release the mutex
                         xSemaphoreGive(semphr_gps_info_Mutex);
                     }

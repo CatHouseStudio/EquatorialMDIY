@@ -128,6 +128,10 @@ const uint8_t Stepper_DEC_Work_Dir = LOW;
 const uint32_t Stepper_DEC_DelayMs = 250;
 const float Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
 
+// Serial 0 Config
+const uint8_t Serial0_Max_Message_Length = 100;
+const uint8_t Serial0_Max_Queue_Length = 20;
+
 inline void Initialize_Pin() // This function is used for Initializing
 {
     // Stepper
