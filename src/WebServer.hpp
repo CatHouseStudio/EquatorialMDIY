@@ -36,8 +36,7 @@ void handleSetTime(AsyncWebServerRequest *request, uint8_t *data);		   // POST h
 void onOTAStart()
 {
 	// Log when OTA has started
-	xQueueSend(queueHandle_Serial0, &"OTA update started!", (TickType_t)0);
-
+	Serial0_Println("OTA update started!");
 	// <Add your own code here>
 }
 
@@ -46,10 +45,7 @@ void onOTAProgress(size_t current, size_t final)
 	// Log every 1 second
 	if (millis() - ota_progress_millis > 1000)
 	{
-		char message[Max_Message_Length];
-		ota_progress_millis = millis();
-		snprintf(message, Max_Message_Length, "OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
-		xQueueSend(queueHandle_Serial0, &message, (TickType_t)0);
+		Serial0_Printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
 	}
 }
 
@@ -58,13 +54,12 @@ void onOTAEnd(bool success)
 	// Log when OTA has finished
 	if (success)
 	{
-		xQueueSend(queueHandle_Serial0, &"OTA update finished successfully!", (TickType_t)0);
+		Serial0_Println("OTA update finished successfully!");
 	}
 	else
 	{
-		xQueueSend(queueHandle_Serial0, &"There was an error during OTA update!", (TickType_t)0);
+		Serial0_Println("There was an error during OTA update!");
 	}
-
 	// <Add your own code here>
 }
 
@@ -78,10 +73,10 @@ void onOTAEnd(bool success)
 */
 void WebServerEvent()
 {
-	xQueueSend(queueHandle_Serial0, &"register Web Server Event", (TickType_t)0);
+	Serial0_Println("registering Web Server Event");
 	if (!SPIFFS.begin(true))
 	{
-		xQueueSend(queueHandle_Serial0, &"An Error has occurred while mounting SPIFFS", (TickType_t)0);
+		Serial0_Println("An Error has occurred while mounting SPIFFS");
 		return;
 	}
 	// Route to load static resource
@@ -132,6 +127,7 @@ void WebServerEvent()
 		else{
 			request->send(415,"text/plain","Unsupported content type");
 		} });
+	Serial0_Println("register Web Server Event Finished!");
 }
 
 // HTTP_GET
@@ -198,7 +194,7 @@ void handleGetConfig(AsyncWebServerRequest *request) // GET http://localhost:300
 
 	// make resp json object
 	JsonDocument respJson;
-	respJson["ssid"] = configJson["SSID"];
+	respJson["ssid"] = configJson["ssid"];
 	respJson["pwd"] = configJson["pwd"];
 	respJson["ratio"] = configJson["ratio"];
 	String response;
