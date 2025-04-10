@@ -17,14 +17,15 @@ void onOTAEnd(bool success);
 void WebServerEvent();
 // Server API events
 // HTTP_GET
-void handleGetRA_DEC_HDMS(AsyncWebServerRequest *request);	// GET http://localhost:3000/get_RA_DEC_HDMS
-void handleGetRA_DEC_Float(AsyncWebServerRequest *request); // GET http://localhost:3000/get_RA_DEC_Float
-void handleGetConfig(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_config
-void handleGetStatus(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_status
-void handleGetEfuseMac(AsyncWebServerRequest *request);		// GET http://localhost:3000/get_EfuseMac
-void handleGetTiltFusion(AsyncWebServerRequest *request);	// GET http://localhost:3000/get_TiltFusion
-void handleGetGPS(AsyncWebServerRequest *request);			// GET http://localhost:3000/get_gps
-
+void handleGetRA_DEC_HDMS(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_RA_DEC_HDMS
+void handleGetRA_DEC_Float(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_RA_DEC_Float
+void handleGetConfig(AsyncWebServerRequest *request);		   // GET http://localhost:3000/get_config
+void handleGetStatus(AsyncWebServerRequest *request);		   // GET http://localhost:3000/get_status
+void handleGetEfuseMac(AsyncWebServerRequest *request);		   // GET http://localhost:3000/get_EfuseMac
+void handleGetTiltFusion(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_TiltFusion
+void handleGetGPS(AsyncWebServerRequest *request);			   // GET http://localhost:3000/get_gps
+void handleGetChipDiagnostics(AsyncWebServerRequest *request); // GET http://localhost:3000/get_ChipDiagnostics
+void handleGetSystemStatus(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_SystemStatus
 // HTTP_POST
 void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_status
 void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_config
@@ -105,6 +106,10 @@ void WebServerEvent()
 	server.on("/get_TiltFusion", HTTP_GET, handleGetTiltFusion);
 	// Get GPS
 	server.on("/get_gps", HTTP_GET, handleGetGPS);
+	// Get Chip Diagnostics
+	server.on("/get_ChipDiagnostics", HTTP_GET, handleGetChipDiagnostics);
+	// Get System Status
+	server.on("/get_SystemStatus", HTTP_GET, handleGetSystemStatus);
 	// POST API
 	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
 						 {
@@ -267,6 +272,117 @@ void handleGetGPS(AsyncWebServerRequest *request) // GET http://localhost:3000/g
 	respJson["lat_d"] = gpsJson["lat_d"];
 	respJson["lat_m"] = gpsJson["lat_m"];
 	respJson["lat_s"] = gpsJson["lat_s"];
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetChipDiagnostics(AsyncWebServerRequest *request) // GET http://localhost:3000/get_ChipDiagnostics
+{
+	esp_chip_info_t chip_info;
+	esp_chip_info(&chip_info);
+
+	const char *model = "Unknown";
+	switch (chip_info.model)
+	{
+	case CHIP_ESP32:
+		model = "ESP32";
+		break;
+	case CHIP_ESP32S2:
+		model = "ESP32-S2";
+		break;
+	case CHIP_ESP32S3:
+		model = "ESP32-S3";
+		break;
+	case CHIP_ESP32C3:
+		model = "ESP32-C3";
+		break;
+	case CHIP_ESP32H2:
+		model = "ESP32-H2";
+		break;
+	default:
+		model = "Unknown";
+		break;
+	}
+	JsonDocument respJson;
+	respJson["chip"]["model"] = model;
+	respJson["chip"]["cores"] = chip_info.cores;
+	respJson["chip"]["revision"] = chip_info.revision;
+	respJson["chip"]["psram"] = psramFound();
+	respJson["chip"]["features"]["wifi"] = (bool)(chip_info.features & CHIP_FEATURE_WIFI_BGN);
+	respJson["chip"]["features"]["bt"] = (bool)(chip_info.features & CHIP_FEATURE_BT);
+	respJson["chip"]["features"]["ble"] = (bool)(chip_info.features & CHIP_FEATURE_BLE);
+	respJson["clock"]["cpu_mhz"] = getCpuFrequencyMhz();
+	respJson["flash"]["size_mb"] = spi_flash_get_chip_size() / (1024 * 1024);
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+void handleGetSystemStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/get_SystemStatus
+{
+	JsonDocument respJson;
+
+	// System Uptime
+	respJson["uptime_ms"] = millis();
+
+	// Usage of heap
+	respJson["heap"]["total_bytes"] = ESP.getHeapSize();
+	respJson["heap"]["free_bytes"] = ESP.getFreeHeap();
+	respJson["heap"]["min_free_bytes"] = esp_get_minimum_free_heap_size();
+
+	//  RTOS Tick and Number of task
+	respJson["rtos"]["tick_rate_hz"] = configTICK_RATE_HZ;
+	respJson["rtos"]["task_count"] = uxTaskGetNumberOfTasks();
+
+	// Stack Status of Each Task
+	/*
+	!Warning Builtin Precompiled ESP-IDF NOT Support!
+	Enable these flags under build_flags in platformio.ini
+		-DconfigGENERATE_RUN_TIME_STATS=1
+		-DconfigUSE_STATS_FORMATTING_FUNCTIONS=1
+		-DconfigUSE_TRACE_FACILITY=1
+	*/
+	// UBaseType_t taskCount = uxTaskGetNumberOfTasks();
+	// TaskStatus_t *status_array = (TaskStatus_t *)pvPortMalloc(taskCount * sizeof(TaskStatus_t));
+	// if (status_array)
+	// {
+	// 	taskCount = uxTaskGetSystemState(status_array, taskCount, NULL);
+	// 	JsonArray taskArr = respJson["tasks"].to<JsonArray>();
+
+	// 	for (UBaseType_t i = 0; i < taskCount; i++)
+	// 	{
+	// 		JsonObject taskObj = taskArr.add<JsonObject>();
+	// 		taskObj["name"] = status_array[i].pcTaskName;
+	// 		taskObj["stack_remaining_bytes"] = status_array[i].usStackHighWaterMark * sizeof(StackType_t);
+	// 		taskObj["priority"] = status_array[i].uxCurrentPriority;
+	// 	}
+	// 	vPortFree(status_array);
+	// }
+
+	// CPU Time status
+	/*
+	!Warning Builtin Precompiled ESP-IDF NOT Support!
+	Enable these flags under build_flags in platformio.ini
+		-DconfigGENERATE_RUN_TIME_STATS=1
+		-DconfigUSE_STATS_FORMATTING_FUNCTIONS=1
+		-DconfigUSE_TRACE_FACILITY=1
+	*/
+
+	// #if (configGENERATE_RUN_TIME_STATS == 1)
+	// 	char *stats_buffer = (char *)pvPortMalloc(1024);
+	// 	if (stats_buffer)
+	// 	{
+	// 		vTaskGetRunTimeStats(stats_buffer);
+	// 		respJson["rtos"]["runtime_stats"] = stats_buffer;
+	// 		vPortFree(stats_buffer);
+	// 	}
+	// 	else
+	// 	{
+	// 		respJson["rtos"]["runtime_stats"] = "malloc failed";
+	// 	}
+	// #else
+	// 	respJson["rtos"]["runtime_stats"] = "disabled";
+	// #endif
+
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
