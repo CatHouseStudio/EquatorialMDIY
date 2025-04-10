@@ -12,23 +12,25 @@
 
 ## API 接口一览
 
-| 接口                  | 请求方法 | 描述                                       | 备注                            |
-| --------------------- | -------- | ------------------------------------------ | ------------------------------- |
-| `/get_status`       | `GET`  | 获取当前设备工作状态                       |                                 |
-| `/get_config`       | `GET`  | 获取当前设备网络状态                       |                                 |
-| `/get_time`         | `GET`  | 获取当前设备时间信息                       | （尚未确定）                    |
-| `/get_gps`          | `GET`  | 获取当前设备位置信息                       |                                 |
-| `/set_status`       | `POST` | 设置当前设备工作状态                       |                                 |
-| `/set_config`       | `POST` | 设置当前设备网络状态                       |                                 |
-| `/set_time`         | `POST` | 设置当前设备时间信息                       | （尚未确定）                    |
-| `/set_gps`          | `POST` | 设置当前设备位置信息                       |                                 |
-| `/get_RA_DEC_Float` | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
-| `/get_RA_DEC_HDMS`  | `GET`  | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
-| `/set_RA_DEC_Float` | `POST` | 设置当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
-| `/set_RA_DEC_HDMS`  | `POST` | 设置当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
-| `/get_EfuseMac`     | `GET`  | 获取当前设备的芯片ID                       |                                 |
-| `/get_TiltFusion`   | `GET`  | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22 |
-| `/update`           |          | 固件和SPIFFS文件的OTA更新                  |                                 |
+| 接口                   | 请求方法 | 描述                                       | 备注                            |
+| ---------------------- | -------- | ------------------------------------------ | ------------------------------- |
+| `/get_status`          | `GET`    | 获取当前设备工作状态                       |                                 |
+| `/get_config`          | `GET`    | 获取当前设备网络状态                       |                                 |
+| `/get_time`            | `GET`    | 获取当前设备时间信息                       | （尚未确定）                    |
+| `/get_gps`             | `GET`    | 获取当前设备位置信息                       |                                 |
+| `/set_status`          | `POST`   | 设置当前设备工作状态                       |                                 |
+| `/set_config`          | `POST`   | 设置当前设备网络状态                       |                                 |
+| `/set_time`            | `POST`   | 设置当前设备时间信息                       | （尚未确定）                    |
+| `/set_gps`             | `POST`   | 设置当前设备位置信息                       |                                 |
+| `/get_RA_DEC_Float`    | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
+| `/get_RA_DEC_HDMS`     | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
+| `/set_RA_DEC_Float`    | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
+| `/set_RA_DEC_HDMS`     | `POST`   | 设置当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
+| `/get_EfuseMac`        | `GET`    | 获取当前设备的芯片ID                       |                                 |
+| `/get_TiltFusion`      | `GET`    | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22 |
+| `/update`              |          | 固件和SPIFFS文件的OTA更新                  |                                 |
+| `/get_ChipDiagnostics` | `GET`    | 获取当前ESP32芯片的相关参数                |                                 |
+| `/get_SystemStatus`    | `GET`    | 获取当前系统状态                           |                                 |
 
 ## 接口详细说明
 
@@ -303,6 +305,57 @@
 }
 ```
 
+### `/get_ChipDiagnostics`
+
+- **方法：** `GET`
+- **描述：** 获取当前ESP32芯片的相关参数。
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+  "chip": {
+    "model": "ESP32",
+    "cores": 2,
+    "revision": 3,
+    "psram": false,
+    "features": {
+      "wifi": true,
+      "bt": true,
+      "ble": true
+    }
+  },
+  "clock": {
+    "cpu_mhz": 240
+  },
+  "flash": {
+    "size_mb": 4
+  }
+}
+```
+
+### `/get_SystemStatus`
+
+- **方法：** `GET`
+- **描述：** 获取当前系统状态
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+  "uptime_ms": 91269,
+  "heap": {
+    "total_bytes": 328508,
+    "free_bytes": 162596,
+    "min_free_bytes": 106608
+  },
+  "rtos": {
+    "tick_rate_hz": 1000,
+    "task_count": 15
+  }
+}
+```
+
 ## 错误代码
 
 * 400 Bad Request：请求参数不完整或无效。
@@ -322,6 +375,7 @@
 * v1.1.1：新增了 `/get_TiltFusion`接口，用于获取当前相机的空间姿态。
 * v1.1.2：调整了HTTP_GET部分的路由，优化代码可读性和维护性。在Configuration.h头部的注释部分补充了DM542C驱动的细分表。按照FreeRTOS的文档建议，调整了 `task_Move_RA`和 `task_Move_DEC`的 `parameters`传递方式。
 * v1.1.3：新增了 `/update`接口的备忘说明。
+* v1.1.4：新增了 `/get_ChipDiagnostics`，用于获取当前ESP32芯片的相关参数。新增了`/get_SystemStatus`，用于获取当前系统状态。
 
 ### 更新内容：
 
@@ -333,4 +387,5 @@
 - 更新了 `/get_TiltFusion`接口示例
 - 增加了一个尚未测试的 `void DelayUs(uint64_t us)`，使用了定时器和FreeRTOS的信号机制，理论效果应该是相当于不存在的 `vTaskDelayMicroseconds(uint32_t us)`
 - 在 `/set_status`用注释模拟了一段调用RA和DEC两个电机的方法
+- 增加了 `/get_ChipDiagnostics`和`/get_SystemStatus`的相关接口示例
   如果还有其他需求或接口说明，请随时调整和完善。
