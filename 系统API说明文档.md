@@ -388,4 +388,5 @@
 - 增加了一个尚未测试的 `void DelayUs(uint64_t us)`，使用了定时器和FreeRTOS的信号机制，理论效果应该是相当于不存在的 `vTaskDelayMicroseconds(uint32_t us)`
 - 在 `/set_status`用注释模拟了一段调用RA和DEC两个电机的方法
 - 增加了 `/get_ChipDiagnostics`和`/get_SystemStatus`的相关接口示例
+- 对所有接口增加了全局日志中间件（串口输出）。
   如果还有其他需求或接口说明，请随时调整和完善。
