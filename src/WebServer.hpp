@@ -10,6 +10,44 @@
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
 
+class LoggingMiddleware : public AsyncMiddleware
+{
+public:
+	void run(AsyncWebServerRequest *request, ArMiddlewareNext next) override
+	{
+		// 获取基本信息
+		String method = request->methodToString();
+		String url = request->url();
+		String clientIP = request->client()->remoteIP().toString();
+		unsigned long start = millis();
+		// Log tig time
+		unsigned long ms = millis();
+		unsigned long sec = ms / 1000;
+		unsigned long min = sec / 60;
+		unsigned long hour = min / 60;
+		Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [REQ] %s %s from %s\n", hour % 24, min % 60, sec % 60, ms % 1000, method.c_str(), url.c_str(), clientIP.c_str());
+
+		// 执行下一个中间件或最终 handler
+		next();
+
+		// handler 之后，打印响应耗时和状态码
+		unsigned long duration = millis() - start;
+		ms = millis();
+		sec = ms / 1000;
+		min = sec / 60;
+		hour = min / 60;
+		if (request->getResponse() != nullptr)
+		{
+			int code = request->getResponse()->code();
+			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> %d in %lums\n",hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), code, duration);
+		}
+		else
+		{
+			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> unknown response in %lums\n",hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), duration);
+		}
+	}
+};
+
 void onOTAStart();
 void onOTAProgress(size_t current, size_t final);
 void onOTAEnd(bool success);
@@ -80,6 +118,7 @@ void WebServerEvent()
 		Serial0_Println("An Error has occurred while mounting SPIFFS");
 		return;
 	}
+	server.addMiddleware(new LoggingMiddleware());
 	// Route to load static resource
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/index.html", "text/html"); });
