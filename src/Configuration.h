@@ -165,3 +165,40 @@ inline void DelayUs(uint32_t us)
 
     esp_timer_delete(timer);
 }
+// =====================
+// Utility Conversions
+// =====================
+
+// Convert h:m:s → hours
+inline double hms_to_hours(int h, int m, double s)
+{
+    return h + m / 60.0 + s / 3600.0;
+}
+
+// Convert d:m:s → decimal degrees
+inline double dms_to_degrees(int d, int m, double s)
+{
+    double sign = (d < 0 || m < 0 || s < 0) ? -1.0 : 1.0;
+    return sign * (fabs(d) + fabs(m) / 60.0 + fabs(s) / 3600.0);
+}
+
+// Convert decimal degrees → degrees, minutes, seconds
+inline void degrees_to_dms(double deg, int &d, int &m, double &s)
+{
+    int sign = (deg >= 0) ? 1 : -1;
+    deg = fabs(deg);
+    d = static_cast<int>(deg);
+    m = static_cast<int>((deg - d) * 60.0);
+    s = ((deg - d) * 60.0 - m) * 60.0;
+    d *= sign;
+}
+
+// Convert degrees → h:m:s (for Azimuth display)
+inline void degrees_to_hms(double deg, int &h, int &m, double &s)
+{
+    deg = fmod(deg + 360.0, 360.0);
+    double hours = deg / 15.0;
+    h = static_cast<int>(hours);
+    m = static_cast<int>((hours - h) * 60.0);
+    s = ((hours - h) * 60.0 - m) * 60.0;
+}

@@ -7,6 +7,7 @@
 // #include "GPSInfo.hpp"
 #include "CelestialStepper.hpp"
 #include "TiltFusionMPU6050.hpp"
+#include "MagneticDeclination.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
 
@@ -39,11 +40,11 @@ public:
 		if (request->getResponse() != nullptr)
 		{
 			int code = request->getResponse()->code();
-			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> %d in %lums\n",hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), code, duration);
+			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> %d in %lums\n", hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), code, duration);
 		}
 		else
 		{
-			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> unknown response in %lums\n",hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), duration);
+			Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [RES] %s -> unknown response in %lums\n", hour % 24, min % 60, sec % 60, ms % 1000, url.c_str(), duration);
 		}
 	}
 };
@@ -65,12 +66,13 @@ void handleGetGPS(AsyncWebServerRequest *request);			   // GET http://localhost:
 void handleGetChipDiagnostics(AsyncWebServerRequest *request); // GET http://localhost:3000/get_ChipDiagnostics
 void handleGetSystemStatus(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_SystemStatus
 // HTTP_POST
-void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_status
-void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);	   // POST http://localhost:3000/set_config
-void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/set_RA_DEC_Float
-void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data);  // POST http://localhost:3000/set_RA_DEC_HDMS
-void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_gps
-void handleSetTime(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_time
+void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data);			   // POST http://localhost:3000/set_status
+void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data);			   // POST http://localhost:3000/set_config
+void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_RA_DEC_Float
+void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data);		   // POST http://localhost:3000/set_RA_DEC_HDMS
+void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data);				   // POST http://localhost:3000/set_gps
+void handleSetTime(AsyncWebServerRequest *request, uint8_t *data);				   // POST http://localhost:3000/set_time
+void handleCalcMagneticDeclination(AsyncWebServerRequest *request, uint8_t *data); // POST http://localhost:3000/calc_MagneticDeclination
 
 void onOTAStart()
 {
@@ -624,6 +626,39 @@ void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data) // POST http://
 	// make resp json object
 	JsonDocument respJson;
 	respJson["status"] = "OK";
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
+
+void handleCalcMagneticDeclination(AsyncWebServerRequest *request, uint8_t *data) // POST http://localhost:3000/calc_MagneticDeclination
+{
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON");
+		return;
+	}
+
+	double lat, lon, alt, year;
+
+	lat = reqJson["lat"];
+	lon = reqJson["lon"];
+	alt = reqJson["alt"];
+	year = reqJson["year"];
+
+	if (load_cof("/WMMHR.COF") != 0)
+	{
+		request->send(500, "text/plain", "Failed to load WMMHR.COF");
+		return;
+	}
+	double decl = calc_declination(lat, lon, alt, year);
+
+	// make resp json object
+	JsonDocument respJson;
+	respJson["decl"] = decl;
+	Serial0_Printf("Magnetic declination (deg): %f\n", decl);
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
