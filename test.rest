@@ -1,60 +1,22 @@
-----
-//获取赤道仪当前状态
-POST http://localhost:3000/status
+POST http://192.167.110.31/calc_MagneticDeclination HTTP/1.1
+Content-Type: application/json
+
+{
+    "lat":31.2304,
+	"lon":121.4737,
+	"alt":0.0,
+	"year":2025.3
+}
+
+
+POST http://192.167.110.31/set_RA_DEC_HDMS HTTP/1.1
 content-type: application/json
+
 {
-
+	"ra_h":3,
+	"ra_m":33,
+	"ra_s":33,
+	"dec_d":75,
+	"dec_m":25,
+	"dec_s":45
 }
-response:
-{
-    t（int）：运行时长，单位为秒
-    s（object）：当前状态，包括：
-        d（int）：方向（0 = 顺时针，1 = 逆时针，2 = 停止）
-        t（int）：速度类型
-        s（float）：速度
-}
-
-//获取赤道仪的配置
-POST http://localhost:3000/config
-content-type: application/json
-{
-  
-}
-response: 
-{
-    ssid（string）：Wi-Fi SSID
-    pwd（string）：Wi-Fi密码
-    ratio（int）：减速比
-}
-
-//设置赤道仪的状态
-POST http://localhost:3000/set_status HTTP/1.1
-content-type: application/json
-{
-    d（int）：方向
-    t（int）：速度类型
-    s（float）：速度
-
-}
-response:
-{
-    status（string）：状态，"OK"表示成功
-}
-
-
-
-
-//设置赤道仪的配置
-POST http://localhost:3000/set_config
-content-type: application/json
-{
-    ssid（string）：Wi-Fi SSID。
-    pwd（string）：Wi-Fi密码。
-    ratio（int）：减速比。
-}
-response:
-{
-    status(string): 状态，"OK"表示成功
-}
-
-
