@@ -25,7 +25,7 @@ void task_Create(void)
     xTaskCreate(
         task_AsyncWebServer,
         "AsyncWebServer Start",
-        configMINIMAL_STACK_SIZE + 40960, // need to calculate the size of the task
+        configMINIMAL_STACK_SIZE + 8192, // need to calculate the size of the task
         NULL,
         configMAX_PRIORITIES - 4,
         &xTaskHandle_AsyncWebServer);
@@ -43,6 +43,13 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 3,
         NULL);
+    // xTaskCreate(
+    //     task_MagneticDeclination,
+    //     "Task MagneticDeclination",
+    //     configMINIMAL_STACK_SIZE + 4096,
+    //     NULL,
+    //     configMAX_PRIORITIES - 3,
+    //     NULL);
     // xTaskCreate(
     //     task_TiltFusion,
     //     "Enable TiltFusion MPU6050",
