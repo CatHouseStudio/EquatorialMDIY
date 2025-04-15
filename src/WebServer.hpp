@@ -20,13 +20,14 @@ public:
 		String method = request->methodToString();
 		String url = request->url();
 		String clientIP = request->client()->remoteIP().toString();
+		uint8_t version = request->version();
 		unsigned long start = millis();
 		// Log tig time
 		unsigned long ms = millis();
 		unsigned long sec = ms / 1000;
 		unsigned long min = sec / 60;
 		unsigned long hour = min / 60;
-		Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [REQ] %s %s from %s\n", hour % 24, min % 60, sec % 60, ms % 1000, method.c_str(), url.c_str(), clientIP.c_str());
+		Serial0_Printf("[%02lu:%02lu:%02lu.%03lu]  [REQ] %s %s from %s HTTP/1.%d\n", hour % 24, min % 60, sec % 60, ms % 1000, method.c_str(), url.c_str(), clientIP.c_str(), version);
 
 		// 执行下一个中间件或最终 handler
 		next();
@@ -66,12 +67,12 @@ void handleGetGPS(AsyncWebServerRequest *request);			   // GET http://localhost:
 void handleGetChipDiagnostics(AsyncWebServerRequest *request); // GET http://localhost:3000/get_ChipDiagnostics
 void handleGetSystemStatus(AsyncWebServerRequest *request);	   // GET http://localhost:3000/get_SystemStatus
 // HTTP_POST
-void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);			   // POST http://localhost:3000/set_status
-void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);			   // POST http://localhost:3000/set_config
-void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);		   // POST http://localhost:3000/set_RA_DEC_Float
-void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);		   // POST http://localhost:3000/set_RA_DEC_HDMS
-void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);				   // POST http://localhost:3000/set_gps
-void handleSetTime(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);				   // POST http://localhost:3000/set_time
+void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);	   // POST http://localhost:3000/set_status
+void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);	   // POST http://localhost:3000/set_config
+void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total); // POST http://localhost:3000/set_RA_DEC_Float
+void handleSetRA_DEC_HDMS(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);  // POST http://localhost:3000/set_RA_DEC_HDMS
+void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);		   // POST http://localhost:3000/set_gps
+void handleSetTime(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);		   // POST http://localhost:3000/set_time
 // void handleCalcMagneticDeclination(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total); // POST http://localhost:3000/calc_MagneticDeclination
 
 void onOTAStart()
@@ -160,33 +161,33 @@ void WebServerEvent()
 	// server.on("/calc_MagneticDeclination", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleCalcMagneticDeclination);
 
 	// POST API
-	server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-						 {
-						 
-		Serial0_Printf(">> Body received for: %s\n", request->url().c_str());
-		Serial0_Printf(">> Content-Type: %s\n", request->contentType().c_str());
-		Serial0_Printf(">> Method: %s\n", request->method() == HTTP_POST ? "POST" : "OTHER");
-						
-        if(request->method()==HTTP_POST && request->contentType()=="application/json"){
-            if(request->url()=="/set_status"){
-                handleSetStatus(request,data,len,index,total);
-            }else if(request->url()=="/set_config"){
-                handleSetConfig(request,data,len,index,total);
-			}else if(request->url()=="/set_RA_DEC_Float"){
-                handleSetRA_DEC_Float(request,data,len,index,total);
-			}else if(request->url()=="/set_RA_DEC_HDMS"){
-                handleSetRA_DEC_HDMS(request,data,len,index,total);
-			}else if(request->url()=="/set_gps"){
-                handleSetGPS(request,data,len,index,total);
-			// }else if (request->url()=="/calc_MagneticDeclination"){
-			// 	handleCalcMagneticDeclination(request,data,len,index,total);
-			}else{
-                request->send(404,"text/plain","Unknown POST endpoint");
-            }
-        }
-		else{
-			request->send(415,"text/plain","Unsupported content type");
-		} });
+	// server.onRequestBody([](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+	// 					 {
+
+	// 	Serial0_Printf(">> Body received for: %s\n", request->url().c_str());
+	// 	Serial0_Printf(">> Content-Type: %s\n", request->contentType().c_str());
+	// 	Serial0_Printf(">> Method: %s\n", request->method() == HTTP_POST ? "POST" : "OTHER");
+
+	//     if(request->method()==HTTP_POST && request->contentType()=="application/json"){
+	//         if(request->url()=="/set_status"){
+	//             handleSetStatus(request,data,len,index,total);
+	//         }else if(request->url()=="/set_config"){
+	//             handleSetConfig(request,data,len,index,total);
+	// 		}else if(request->url()=="/set_RA_DEC_Float"){
+	//             handleSetRA_DEC_Float(request,data,len,index,total);
+	// 		}else if(request->url()=="/set_RA_DEC_HDMS"){
+	//             handleSetRA_DEC_HDMS(request,data,len,index,total);
+	// 		}else if(request->url()=="/set_gps"){
+	//             handleSetGPS(request,data,len,index,total);
+	// 		// }else if (request->url()=="/calc_MagneticDeclination"){
+	// 		// 	handleCalcMagneticDeclination(request,data,len,index,total);
+	// 		}else{
+	//             request->send(404,"text/plain","Unknown POST endpoint");
+	//         }
+	//     }
+	// 	else{
+	// 		request->send(415,"text/plain","Unsupported content type");
+	// 	} });
 	Serial0_Println("register Web Server Event Finished!");
 }
 
@@ -677,5 +678,3 @@ void handleSetGPS(AsyncWebServerRequest *request, uint8_t *data, size_t len, siz
 // 	serializeJson(respJson, response);
 // 	request->send(200, "application/json", response);
 // }
-
-
