@@ -82,12 +82,4 @@ void task_AsyncWebServer(void *parameters)
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
-void task_TiltFusion(void *parameters)
-{
-    InitTiltFusion();
-    for (;;)
-    {
-        safeUpdateTiltFusion();
-        vTaskDelay(pdMS_TO_TICKS(20)); // too low may block "thread"
-    }
-}
+

@@ -6,7 +6,7 @@
 #include "CelestialPositioning.hpp"
 // #include "GPSInfo.hpp"
 #include "CelestialStepper.hpp"
-#include "TiltFusionMPU6050.hpp"
+#include "I2CWorker.hpp"
 // #include "MagneticDeclination.hpp"
 static AsyncWebServer server(80);
 unsigned long ota_progress_millis = 0;
@@ -298,15 +298,22 @@ void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3
 }
 void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost:3000/get_TiltFusion
 {
-	float r, p, z;
-	safeGetAngles(r, p, z);
-	JsonDocument respJson;
-	respJson["roll"] = r;
-	respJson["pitch"] = r;
-	respJson["ztilt"] = z;
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
+	MPUResult mpuResult;
+	if (GetLatestMPU(mpuResult))
+	{
+
+		JsonDocument respJson;
+		respJson["roll"] = mpuResult.roll;
+		respJson["pitch"] = mpuResult.pitch;
+		respJson["ztilt"] = mpuResult.ztilt;
+		String response;
+		serializeJson(respJson, response);
+		request->send(200, "application/json", response);
+	}
+	else	// This should not happen.....
+	{
+		request->send(503, "text/plain", "No MPU data");
+	}
 }
 void handleGetGPS(AsyncWebServerRequest *request) // GET http://localhost:3000/get_gps
 {
@@ -501,7 +508,7 @@ void handleSetStatus(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
 	}
 	else
 	{
-		respJson["status"] = "DE C motor is already running";
+		respJson["status"] = "DEC motor is already running";
 	}
 	String response;
 	serializeJson(respJson, response);

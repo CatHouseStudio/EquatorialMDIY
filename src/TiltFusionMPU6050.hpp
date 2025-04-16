@@ -4,6 +4,7 @@
 #include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "SerialMessage.hpp"
 
 MPU6050 mpu;
 SemaphoreHandle_t semphr_tiltMutex = NULL; // RTOS互斥锁
@@ -27,7 +28,12 @@ void InitTiltFusion()
 {
     semphr_tiltMutex = xSemaphoreCreateMutex(); // 初始化互斥锁
     mpu.initialize();
-    delay(100);
+    if (!mpu.testConnection())
+    {
+        Serial0_Println("MPU6050 initialize failed!");
+        return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(100));
     for (int i = 0; i < 200; i++)
     {
         int16_t ax, ay, az, gx, gy, gz;
@@ -38,7 +44,7 @@ void InitTiltFusion()
         gxo += gx;
         gyo += gy;
         gzo += gz;
-        delay(2);
+        vTaskDelay(pdMS_TO_TICKS(2));
     }
     axo /= 200;
     ayo /= 200;
