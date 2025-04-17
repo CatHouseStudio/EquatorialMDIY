@@ -6,7 +6,6 @@
 // tasks
 
 void task_AsyncWebServer(void *parameters);
-void task_TiltFusion(void *parameters);
 
 // task handle
 static TaskHandle_t xTaskHandle_AsyncWebServer = NULL;
@@ -43,13 +42,13 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 3,
         NULL);
-    // xTaskCreate(
-    //     task_MagneticDeclination,
-    //     "Task MagneticDeclination",
-    //     configMINIMAL_STACK_SIZE + 4096,
-    //     NULL,
-    //     configMAX_PRIORITIES - 3,
-    //     NULL);
+    xTaskCreate(
+        task_I2CWorker,
+        "Task I2CWorker",
+        configMINIMAL_STACK_SIZE + 4096,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        NULL);
     // xTaskCreate(
     //     task_TiltFusion,
     //     "Enable TiltFusion MPU6050",
