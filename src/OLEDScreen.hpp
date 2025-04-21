@@ -25,9 +25,16 @@ void InitOLEDScreen();
 
 void InitOLEDScreen()
 {
+    bool success = display.begin(SSD1306_SWITCHCAPVCC, 0x3c);
+    if (!success)
+    {
+        Serial0_Println("SSD1306 initialization failed!");
+        return;
+    }
+    Serial0_Println("SSD1306 initialization succeed!");
     semphr_OLEDScreenMutex = xSemaphoreCreateMutex();
     display.clearDisplay();
-    display.setTextSize(1);
+    display.setTextSize(2);
     display.setTextColor(SSD1306_WHITE);
     display.setCursor(0, 0);
     display.println("System Booting...");

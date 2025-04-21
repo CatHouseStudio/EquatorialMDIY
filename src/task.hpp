@@ -67,7 +67,7 @@ void task_Create(void)
 void task_AsyncWebServer(void *parameters)
 {
     WiFi_AP_Init();
-    // WiFi_STA_Init();
+    WiFi_STA_Init();
     WebServerEvent();
     ElegantOTA.begin(&server); // Start ElegantOTA
     // ElegantOTA callbacks
