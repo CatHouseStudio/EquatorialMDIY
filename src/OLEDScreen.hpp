@@ -70,12 +70,12 @@ const unsigned char boot_logo_bits[] PROGMEM = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xef, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 const unsigned char wifi_icon_bits[] PROGMEM = {
-    0xff, 0xf0, 0xf9, 0xf0, 0xe6, 0x70, 0x9f, 0x90, 0x70, 0xe0, 0xef, 0x70, 0xd9, 0xb0, 0xb6, 0xd0,
-    0xef, 0x70, 0xf9, 0xf0, 0xf9, 0xf0, 0xff, 0xf0};
+    0x00, 0x00, 0x06, 0x00, 0x19, 0x80, 0x60, 0x60, 0x8f, 0x10, 0x10, 0x80, 0x26, 0x40, 0x49, 0x20,
+    0x10, 0x80, 0x06, 0x00, 0x06, 0x00, 0x00, 0x00};
 
 const unsigned char ap_icon_bits[] PROGMEM = {
-    0xcf, 0x30, 0x9f, 0x90, 0xa6, 0x50, 0x4f, 0x20, 0x50, 0xa0, 0x50, 0xa0, 0x49, 0x20, 0x29, 0x40,
-    0x99, 0x90, 0xc9, 0x30, 0xf9, 0xf0, 0xf9, 0xf0};
+    0x30, 0xc0, 0x60, 0x60, 0x59, 0xa0, 0xb0, 0xd0, 0xaf, 0x50, 0xaf, 0x50, 0xb6, 0xd0, 0xd6, 0xb0,
+    0x66, 0x60, 0x36, 0xc0, 0x06, 0x00, 0x06, 0x00};
 
 const unsigned char battery_icon_bits[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00, 0xff, 0xe0, 0x80, 0x20, 0xbf, 0xb0, 0xbf, 0xb0, 0xbf, 0xb0, 0x80, 0x20,
@@ -157,7 +157,7 @@ void drawOLEDMainData()
         // 清除主区域
         display.fillRect(0, 13, 128, 64 - 13, SSD1306_BLACK);
 
-        display.setCursor(0, 15);
+        display.setCursor(0, 16);
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
 
@@ -178,8 +178,8 @@ void drawOLEDStatusBar()
     {
         bool wifiConnected = WiFi.isConnected();
         bool apActive = WiFi.softAPgetStationNum() > 0;
-        int batteryPercent = 100; //! For now I use Fake Data here
-        // safeGetBatteryLevel(batteryPercent);  // 你自带 mutex 的数据接口
+        float batteryPercent = 100; //! For now I use Fake Data here
+        safeGetBatteryLevel(batteryPercent);  // 你自带 mutex 的数据接口
 
         // 清除状态栏区域（顶部 12 行）
         display.fillRect(0, 0, 128, 12, SSD1306_BLACK);
@@ -188,22 +188,22 @@ void drawOLEDStatusBar()
         if (wifiConnected)
         {
             display.drawBitmap(cursor, 0, wifi_icon_bits, 12, 12, SSD1306_WHITE);
-            cursor += 16; // 图标+间距
         }
+        cursor += 16; // 图标+间距
         if (apActive)
         {
             display.drawBitmap(cursor, 0, ap_icon_bits, 12, 12, SSD1306_WHITE);
-            cursor += 16;
         }
+        cursor += 16;
 
         // 电量显示（右上角）
-        int batteryX = 128 - 12 - 30; // 图标 + 文本区
+        int batteryX = 128 - 16 - 36; // 图标 + 文本区
         display.drawBitmap(batteryX, 0, battery_icon_bits, 12, 12, SSD1306_WHITE);
 
         display.setCursor(batteryX + 14, 2);
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
-        display.printf("%3d%%", batteryPercent);
+        display.printf("%5.1f%%", batteryPercent);
 
         display.display();
         xSemaphoreGive(semphr_OLEDScreenMutex);

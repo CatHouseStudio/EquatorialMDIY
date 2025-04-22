@@ -1,9 +1,9 @@
 #pragma once
 #include <Wire.h>
-#include <Adafruit_INA219.h>
+#include "INA226.h"
 #include "SerialMessage.hpp"
 
-Adafruit_INA219 ina219;
+INA226 ina(0x40);
 SemaphoreHandle_t semphr_ina219Mutex = NULL;
 
 struct INAResult
@@ -21,11 +21,13 @@ static float shuntVoltage_mW = 0;
 
 static float batteryPercent = 100.0;
 
-void InitINA219();
+void InitINA();
 void updateINA();
 void getINA(INAResult &inaResult);
 void safeUpdateINA();
 void safeGetINA(INAResult &inaResult);
+void safeGetBatteryLevel(float &blv);
+
 float estimateSOC(float voltage);
 
 float estimateSOC(float voltage)
@@ -49,28 +51,30 @@ float estimateSOC(float voltage)
     }
     return 100.0;
 }
-void InitINA219()
+void InitINA()
 {
     semphr_ina219Mutex = xSemaphoreCreateMutex();
-    if (!ina219.begin())
+    if (!ina.begin())
     {
-        Serial0_Println("INA219 initialize failed!");
+        Serial0_Println("INA initialize failed!");
         return;
     }
+    Serial0_Println("INA initialize succeed!");
     vTaskDelay(pdMS_TO_TICKS(100));
-    ina219.getBusVoltage_V();
-    ina219.getCurrent_mA();
-    ina219.getPower_mW();
-    ina219.getShuntVoltage_mV();
+    ina.setMaxCurrentShunt(1, 0.002);
+    ina.getBusVoltage();
+    ina.getCurrent_mA();
+    ina.getPower_mW();
+    ina.getShuntVoltage_mV();
 }
 
 void updateINA()
 {
-    busVoltage_V = ina219.getBusVoltage_V();
-    current_mA = ina219.getCurrent_mA();
-    power_mW = ina219.getPower_mW();
-    shuntVoltage_mW = ina219.getShuntVoltage_mV();
-    batteryPercent=estimateSOC(25.2);   //! For now I use Fake Data here!!!
+    busVoltage_V = ina.getBusVoltage();
+    current_mA = ina.getCurrent_mA();
+    power_mW = ina.getPower_mW();
+    shuntVoltage_mW = ina.getShuntVoltage_mV();
+    batteryPercent=estimateSOC(busVoltage_V);  
 }
 void safeUpdateINA()
 {
@@ -92,6 +96,13 @@ void safeGetINA(INAResult &inaResult)
     if (xSemaphoreTake(semphr_ina219Mutex, portMAX_DELAY) == pdTRUE)
     {
         getINA(inaResult);
+        xSemaphoreGive(semphr_ina219Mutex);
+    }
+}
+void safeGetBatteryLevel(float &blv){
+    if (xSemaphoreTake(semphr_ina219Mutex, portMAX_DELAY) == pdTRUE)
+    {
+        blv=batteryPercent;
         xSemaphoreGive(semphr_ina219Mutex);
     }
 }

@@ -1,5 +1,5 @@
 #include "TiltFusionMPU6050.hpp"
-#include "INA219Sensor.hpp"
+#include "INASensor.hpp"
 #include "OLEDScreen.hpp"
 
 enum I2CCommandType
@@ -36,7 +36,7 @@ void task_I2CWorker(void *parameters)
     InitOLEDScreen();
     playBootAnimation();
     InitTiltFusion();
-    InitINA219();
+    InitINA();
     I2CCommand cmd;
     MPUResult mpuResult;
     INAResult inaResult;
@@ -55,10 +55,10 @@ void task_I2CWorker(void *parameters)
                 break;
             }
         }
-        // safeUpdateTiltFusion();
+        safeUpdateTiltFusion();
         // safeGetAngles(mpuResult);
         // xQueueOverwrite(xQueueHandle_MPU_I2CWorker, &mpuResult);
-        // safeUpdateINA();
+        safeUpdateINA();
         // safeGetINA(inaResult);
         // xQueueOverwrite(xQueueHandle_INA_I2CWorker, &inaResult);
         drawOLEDStatusBar();

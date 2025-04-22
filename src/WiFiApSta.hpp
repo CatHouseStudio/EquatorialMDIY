@@ -10,7 +10,7 @@ void WiFi_STA_Init();
 void WiFi_STA_Init()
 {
     WiFi.mode(WIFI_AP_STA);
-    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
+    // esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     //! you must change the wifi ssid and passwd
     const char *sta_ssid = "ax3000-818";
     const char *sta_passwd = "fl123456789";
