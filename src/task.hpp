@@ -6,7 +6,6 @@
 // tasks
 
 void task_AsyncWebServer(void *parameters);
-void task_TiltFusion(void *parameters);
 
 // task handle
 static TaskHandle_t xTaskHandle_AsyncWebServer = NULL;
@@ -43,13 +42,13 @@ void task_Create(void)
         NULL,
         configMAX_PRIORITIES - 3,
         NULL);
-    // xTaskCreate(
-    //     task_MagneticDeclination,
-    //     "Task MagneticDeclination",
-    //     configMINIMAL_STACK_SIZE + 4096,
-    //     NULL,
-    //     configMAX_PRIORITIES - 3,
-    //     NULL);
+    xTaskCreate(
+        task_I2CWorker,
+        "Task I2CWorker",
+        configMINIMAL_STACK_SIZE + 4096,
+        NULL,
+        configMAX_PRIORITIES - 3,
+        NULL);
     // xTaskCreate(
     //     task_TiltFusion,
     //     "Enable TiltFusion MPU6050",
@@ -68,7 +67,7 @@ void task_Create(void)
 void task_AsyncWebServer(void *parameters)
 {
     WiFi_AP_Init();
-    // WiFi_STA_Init();
+    WiFi_STA_Init();
     WebServerEvent();
     ElegantOTA.begin(&server); // Start ElegantOTA
     // ElegantOTA callbacks
@@ -82,12 +81,4 @@ void task_AsyncWebServer(void *parameters)
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
-void task_TiltFusion(void *parameters)
-{
-    InitTiltFusion();
-    for (;;)
-    {
-        safeUpdateTiltFusion();
-        vTaskDelay(pdMS_TO_TICKS(20)); // too low may block "thread"
-    }
-}
+

@@ -5,6 +5,7 @@
         "cmath": "cpp",
         "*.tcc": "cpp",
         "fstream": "cpp",
-        "cstdlib": "cpp"
+        "cstdlib": "cpp",
+        "numeric": "cpp"
     }
 }

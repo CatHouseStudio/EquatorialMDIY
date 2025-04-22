@@ -4,9 +4,17 @@
 #include <math.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "SerialMessage.hpp"
 
 MPU6050 mpu;
 SemaphoreHandle_t semphr_tiltMutex = NULL; // RTOS互斥锁
+
+struct MPUResult
+{
+    float roll;
+    float pitch;
+    float ztilt;
+};
 
 const float AcceRatio = 16384.0f;
 const float GyroRatio = 131.0f;
@@ -27,7 +35,12 @@ void InitTiltFusion()
 {
     semphr_tiltMutex = xSemaphoreCreateMutex(); // 初始化互斥锁
     mpu.initialize();
-    delay(100);
+    if (!mpu.testConnection())
+    {
+        Serial0_Println("MPU6050 initialize failed!");
+        return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(100));
     for (int i = 0; i < 200; i++)
     {
         int16_t ax, ay, az, gx, gy, gz;
@@ -38,7 +51,7 @@ void InitTiltFusion()
         gxo += gx;
         gyo += gy;
         gzo += gz;
-        delay(2);
+        vTaskDelay(pdMS_TO_TICKS(2));
     }
     axo /= 200;
     ayo /= 200;
@@ -128,25 +141,25 @@ void updateTiltFusion()
     Pz *= (1 - Kz);
 }
 
-void getAngles(float &roll, float &pitch, float &ztilt)
+void getAngles(MPUResult &mpuResult)
 {
-    roll = agx;
-    pitch = agy;
-    ztilt = agz;
+    mpuResult.roll = agx;
+    mpuResult.pitch = agy;
+    mpuResult.ztilt = agz;
     if (useRadians)
     {
-        roll *= PI / 180.0f;
-        pitch *= PI / 180.0f;
-        ztilt *= PI / 180.0f;
+        mpuResult.roll *= PI / 180.0f;
+        mpuResult.pitch *= PI / 180.0f;
+        mpuResult.ztilt *= PI / 180.0f;
     }
 }
 
-void getZeroedAngles(float &roll, float &pitch, float &ztilt)
+void getZeroedAngles(MPUResult &mpuResult)
 {
-    getAngles(roll, pitch, ztilt);
-    roll -= offset_roll;
-    pitch -= offset_pitch;
-    ztilt -= offset_ztilt;
+    getAngles(mpuResult);
+    mpuResult.roll -= offset_roll;
+    mpuResult.pitch -= offset_pitch;
+    mpuResult.ztilt -= offset_ztilt;
 }
 
 // ✅ 线程安全接口
@@ -159,20 +172,20 @@ void safeUpdateTiltFusion()
     }
 }
 
-void safeGetAngles(float &roll, float &pitch, float &ztilt)
+void safeGetAngles(MPUResult &mpuResult)
 {
     if (xSemaphoreTake(semphr_tiltMutex, portMAX_DELAY) == pdTRUE)
     {
-        getAngles(roll, pitch, ztilt);
+        getAngles(mpuResult);
         xSemaphoreGive(semphr_tiltMutex);
     }
 }
 
-void safeGetZeroedAngles(float &roll, float &pitch, float &ztilt)
+void safeGetZeroedAngles(MPUResult &mpuResult)
 {
     if (xSemaphoreTake(semphr_tiltMutex, portMAX_DELAY) == pdTRUE)
     {
-        getZeroedAngles(roll, pitch, ztilt);
+        getZeroedAngles(mpuResult);
         xSemaphoreGive(semphr_tiltMutex);
     }
 }

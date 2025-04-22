@@ -45,8 +45,8 @@ static bool is_DEC_running = false;
 bool Is_Stepper_RA_running();
 bool Is_Stepper_DEC_running();
 
-bool Stepper_RA_TrySendCommand(const MoveCommand *cmd);
-bool Stepper_DEC_TrySendCommand(const MoveCommand *cmd);
+bool Stepper_RA_SendCommand(const MoveCommand &cmd);
+bool Stepper_DEC_SendCommand(const MoveCommand &cmd);
 
 void Stepper_RA_Stop();
 void Stepper_DEC_Stop();
@@ -229,23 +229,24 @@ void set_Stepper_DEC_running(bool state)
         xSemaphoreGive(semphr_Stepper_DEC_Mutex);
     }
 }
-bool Stepper_RA_TrySendCommand(const MoveCommand *cmd)
+bool Stepper_RA_SendCommand(const MoveCommand &cmd)
 {
     if (Is_Stepper_RA_running())
     {
         // task is running, can not send command
         return false;
     }
-    return xQueueSend(queueHandle_Stepper_RA, cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
+    return xQueueSend(queueHandle_Stepper_RA, &cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
 }
-bool Stepper_DEC_TrySendCommand(const MoveCommand *cmd)
+bool Stepper_DEC_SendCommand(const MoveCommand 
+    &cmd)
 {
     if (Is_Stepper_DEC_running())
     {
         // task is running, can not send command
         return false;
     }
-    return xQueueSend(queueHandle_Stepper_DEC, cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
+    return xQueueSend(queueHandle_Stepper_DEC, &cmd, (TickType_t)0) == pdPASS; // if queue is full, will return errQUEUE_FULL
 }
 
 void Stepper_RA_Stop()
