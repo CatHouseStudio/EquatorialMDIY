@@ -161,9 +161,9 @@ void drawOLEDMainData()
         display.setTextSize(1);
         display.setTextColor(SSD1306_WHITE);
 
-        display.printf("Roll:   %+6.1f\n", mpu.roll);
-        display.printf("Pitch:  %+6.1f\n", mpu.pitch);
-        display.printf("ZTilt:  %+6.1f\n", mpu.ztilt);
+        display.printf("Roll:   %+6.2f\n", mpu.roll);
+        display.printf("Pitch:  %+6.2f\n", mpu.pitch);
+        display.printf("ZTilt:  %+6.2f\n", mpu.ztilt);
         display.printf("Heap:   %d/%d KB\n", (int)(free / 1024), (int)(total / 1024));
         display.printf("MinFree:%d KB\n", (int)(minFree / 1024));
 
