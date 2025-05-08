@@ -1,5 +1,5 @@
 #include "TiltFusionMPU6050.hpp"
-// #include "INA219Sensor.hpp"
+#include "INASensor.hpp"
 #include "OLEDScreen.hpp"
 
 enum I2CCommandType
@@ -33,33 +33,36 @@ void task_I2CWorker(void *parameters)
     xTaskHandle_I2CWorker = xTaskGetCurrentTaskHandle();
 
     Wire.begin();
-    InitTiltFusion();
-    // InitINA219();
     InitOLEDScreen();
-
+    playBootAnimation();
+    InitTiltFusion();
+    InitINA();
     I2CCommand cmd;
     MPUResult mpuResult;
-    // INAResult inaResult;
+    INAResult inaResult;
     for (;;)
     {
-        if (xQueueReceive(xQueueHandle_CMD_I2CWorker, &cmd, pdMS_TO_TICKS(20)) == pdPASS)
+        if (xQueueReceive(xQueueHandle_CMD_I2CWorker, &cmd, pdMS_TO_TICKS(50)) == pdPASS)
         {
             switch (cmd.type)
             {
             case I2C_CMD_SET_OLED_CONFIG:
-                safeUpdateOLEDScreen(cmd.oledConfig);
-                Serial0_Println("Update OLED Screen");
+            //! even if I keep this method, please do not use it, unless you know what are you doing!!!
+                // safeUpdateOLEDScreen(cmd.oledConfig);
+                // Serial0_Println("Update OLED Screen");
                 break;
             default: // YOU should never into this block
                 break;
             }
         }
         safeUpdateTiltFusion();
-        safeGetAngles(mpuResult);
-        xQueueOverwrite(xQueueHandle_MPU_I2CWorker, &mpuResult);
-        // safeUpdateINA();
+        // safeGetAngles(mpuResult);
+        // xQueueOverwrite(xQueueHandle_MPU_I2CWorker, &mpuResult);
+        safeUpdateINA();
         // safeGetINA(inaResult);
         // xQueueOverwrite(xQueueHandle_INA_I2CWorker, &inaResult);
+        drawOLEDStatusBar();
+        drawOLEDMainData();
     }
 }
 

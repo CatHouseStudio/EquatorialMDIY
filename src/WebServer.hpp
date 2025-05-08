@@ -308,20 +308,6 @@ void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost
 		respJson["ztilt"] = mpuResult.ztilt;
 		String response;
 		serializeJson(respJson, response);
-		char txt[OLED_Text_Max_Length];
-		strncpy(txt, response.c_str(), OLED_Text_Max_Length);
-		txt[OLED_Text_Max_Length - 1] = '\0';
-		I2CCommand cmd={};
-		cmd.type = I2C_CMD_SET_OLED_CONFIG;
-		strncpy(cmd.oledConfig.text, txt, OLED_Text_Max_Length);
-		cmd.oledConfig.text_size = 2;
-		cmd.oledConfig.text_color = SSD1306_WHITE; // ✅ 字体颜色
-		cmd.oledConfig.bg_color = SSD1306_BLACK;
-		cmd.oledConfig.cursor_x = 0;		// ✅ 光标位置 X
-		cmd.oledConfig.cursor_y = 0;		// ✅ 光标位置 Y
-		cmd.oledConfig.clear_screen = true; // ✅ 是否清屏（默认 true）
-		SendI2CCommand(cmd);
-
 		request->send(200, "application/json", response);
 	}else // This should not happen.....
 	{
