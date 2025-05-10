@@ -16,11 +16,13 @@
 | ---------------------- | -------- | ------------------------------------------ | ------------------------------- |
 | `/get_status`          | `GET`    | 获取当前设备工作状态                       |                                 |
 | `/get_config`          | `GET`    | 获取当前设备网络状态                       |                                 |
+| `/get_ratio_config`    | `GET`    | 获取当前设备减速箱速比                      |                                 |
 | `/get_time`            | `GET`    | 获取当前设备时间信息                       | （尚未确定）                    |
 | `/get_gps`             | `GET`    | 获取当前设备位置信息                       |                                 |
-| `/set_status`          | `POST`   | 设置当前设备工作状态                       |                                 |
+| `/set_status`          | `POST`   | 设置当前设备工作状态   
+| `/set_ratio_config`    | `POST`     设置当前使用减速箱速比                     | 
 | `/set_config`          | `POST`   | 设置当前设备网络状态                       |                                 |
-| `/set_time`            | `POST`   | 设置当前设备时间信息                       | （尚未确定）                    |
+| `/set_time`?            | `POST`   | 设置当前设备时间信息                       | （尚未确定）                    |
 | `/set_gps`             | `POST`   | 设置当前设备位置信息                       |                                 |
 | `/get_RA_DEC_Float`    | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。浮点格式 |                                 |
 | `/get_RA_DEC_HDMS`     | `GET`    | 获取当前跟踪星体的赤经和赤纬信息。HDMS格式 |                                 |
@@ -60,6 +62,18 @@
 {
     "ap_ssid":"ESP32-Access-Point",     // 设备WiFi-AP模式下的SSID
     "ap_password":"123456789",          // 设备WiFi-AP模式下的Password
+}
+### `/get_ratio_config`
+
+- **方法：** `GET`
+- **描述：** 获取当前赤道仪减速箱减速比。
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+    "ratio":"50",     // 减速箱减速比
+    
 }
 ```
 
@@ -130,6 +144,18 @@
 {
     "ap_ssid":"ESP32-Access-Point",     // 设备WiFi-AP模式下的SSID
     "ap_password":"123456789",          // 设备WiFi-AP模式下的Password
+}
+```
+### `/set_ratio_config`
+
+- **方法：** `POST`
+- **描述：** 设置当前赤道仪减速箱减速比。
+- **请求参数：**
+
+```json
+{
+    "ratio":"50",     // 减速箱减速比
+   
 }
 ```
 
