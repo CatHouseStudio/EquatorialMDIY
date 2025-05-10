@@ -55,12 +55,7 @@ void task_I2CWorker(void *parameters)
                 break;
             }
         }
-        safeUpdateTiltFusion();
-        // safeGetAngles(mpuResult);
-        // xQueueOverwrite(xQueueHandle_MPU_I2CWorker, &mpuResult);
         safeUpdateINA();
-        // safeGetINA(inaResult);
-        // xQueueOverwrite(xQueueHandle_INA_I2CWorker, &inaResult);
         drawOLEDStatusBar();
         drawOLEDMainData();
     }
