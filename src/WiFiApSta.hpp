@@ -14,14 +14,18 @@ void WiFi_STA_Init()
     //! you must change the wifi ssid and passwd
     const char *sta_ssid = "ax3000-818";
     const char *sta_passwd = "fl123456789";
-    esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
+    // esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     WiFi.begin(sta_ssid, sta_passwd);
 
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
+    uint8_t retry_times=0;
+
     Serial0_Println("Setting STA (Station)…");
+    while (WiFi.status() != WL_CONNECTED&&retry_times<5)
+    {   
+        Serial0_Println("Retry Connect to STA...");
+        ++retry_times;
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
     Serial0_Print("STA IP address: ");
     Serial0_Println(WiFi.localIP().toString());
     vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -41,7 +45,7 @@ void WiFi_AP_Init()
     // Read config.json from SPIFFS
     if (SPIFFS.begin(true))
     {
-        File configFile = SPIFFS.open("/config.json");
+        File configFile = SPIFFS.open("/Config.json");
         if (!configFile)
         {
             Serial0_Println("Failed to open JSON file, Using default configuration");
@@ -49,7 +53,7 @@ void WiFi_AP_Init()
             WiFi.softAP(default_ap_ssid, default_ap_password);
             WiFi.softAPConfig(localIP, gateway, subnet);
             Serial0_Print("AP IP address: ");
-            Serial0_Println(WiFi.localIP().toString());
+            Serial0_Println(WiFi.softAPIP().toString());
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
         else
@@ -63,7 +67,7 @@ void WiFi_AP_Init()
                 WiFi.softAP(default_ap_ssid, default_ap_password);
                 WiFi.softAPConfig(localIP, gateway, subnet);
                 Serial0_Print("AP IP address: ");
-                Serial0_Println(WiFi.localIP().toString());
+                Serial0_Println(WiFi.softAPIP().toString());
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             }
             else
@@ -75,7 +79,7 @@ void WiFi_AP_Init()
                 WiFi.softAP(ap_ssid, ap_pwd);
                 WiFi.softAPConfig(localIP, gateway, subnet);
                 Serial0_Print("AP IP address: ");
-                Serial0_Println(WiFi.localIP().toString());
+                Serial0_Println(WiFi.softAPIP().toString());
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             }
         }
@@ -88,10 +92,10 @@ void WiFi_AP_Init()
         WiFi.softAP(default_ap_ssid, default_ap_password);
         WiFi.softAPConfig(localIP, gateway, subnet);
         Serial0_Print("AP IP address: ");
-        Serial0_Println(WiFi.localIP().toString());
+        Serial0_Println(WiFi.softAPIP().toString());
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-    Serial0_Println("Setting AP (Access Point)…");
+    Serial0_Println("Set AP (Access Point) Finished!");
 }
 
 void WiFi_AP_Reboot(String ap_ssid, String ap_pwd)
