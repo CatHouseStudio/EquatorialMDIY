@@ -2,7 +2,7 @@
 
 ```
 
-# 系统API说明文档
+<!-- # 系统API说明文档
 
 更新日期：2025.3.28
 
@@ -32,11 +32,40 @@
 | `/get_TiltFusion`      | `GET`    | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22 |
 | `/update`              |          | 固件和SPIFFS文件的OTA更新                  |                                 |
 | `/get_ChipDiagnostics` | `GET`    | 获取当前ESP32芯片的相关参数                |                                 |
-| `/get_SystemStatus`    | `GET`    | 获取当前系统状态                           |                                 |
+| `/get_SystemStatus`    | `GET`    | 获取当前系统状态                           |                                 | -->
+
+# 系统API说明文档
+
+更新日期：2025.5.13
+
+## 适用内容
+
+重新设计Web UI 与 ESP32 单片机之间通信的 API 接口。Web UI 负责发起请求并显示响应结果，而 ESP32 处理并执行相应的命令或任务。本文档中列出的所有 API 均采用 JSON 格式的请求和响应。
+目前规划中的接口大致分为：配置内容的设置以及配置内容和硬件信息的获取
+当前设计为前端完全承担双轴步进脉冲量计算，需考虑电机同步与初始化
+
+## 前端API 接口一览
+
+| 接口                   | 请求方法 | 描述                                       | 备注                            |
+| ---------------------- | -------- | ------------------------------------------ | ------------------------------- |
+| `/api/get_status`          | `GET`    | 获取当前设备工作状态                       |                                 |
+态                |                                 |
+| `/api/get_ap_config`       | `GET`    | 获取当前设备网络状态                       |                                 |
+| `/api/set_ap_config`       | `GET`    | 设置当前设备网络状态                       |                                 |
+| `/api/get_ratio_config`    | `GET`    | 获取当前设备减速箱速比                      |                                 |
+| `/api/set_ratio_config`    | `POST`   | 设置当前使用RA轴与DEC轴的减速箱减速比                 | 
+| `/api/get_TiltFusion`      | `GET`    | 获取当前相机的空间姿态                     | ESP32的SDA为Pin-21，SCL为Pin-22 |
+| `/api/update`              |          | 固件和SPIFFS文件的OTA更新                  |                                 |
+| `/api/get_SystemStatus`    | `GET`    | 获取当前系统状态                           |                                 |
+| `/api/start_tracking`      | `GET`    | 定位到目标天体后启动RA轴同步地球自转跟踪天体                          
+| `/api/pluse_to_target`      | `POST`  | 前端计算完位移量后发送给后端进行电机驱动                          
+| `/api/stop_moving`         | `GET`    | 停止全部电机的运动                          
+| `/api/set_current_motor_position`     | `POST`    | 初始化电机步数                          
+| `/api/get_motor_status`     | `GET`    | 获取当前电机位置                       
 
 ## 接口详细说明
 
-### `/get_status`
+### `/api/get_status`
 
 - **方法：** `GET`
 - **描述：** 获取当前 ESP32 设备的工作状态。
@@ -45,24 +74,29 @@
 
 ```json
 {
-    "uptime":5000,      // 设备运行时间（秒）
-    "direction":2,      // 单电机运行方向（0 = 顺时针，1 = 逆时针，2 = 停止）
-    "speed":12.3        // 单电机运行速度（脉冲赫兹）
+    "current_ra": 15.55,
+    "current_dec": 78.88,
+    "stepmotor_status": {
+        "RA": "idle",
+        "DEC": "moving"
+    },
+    "tracking": false
 }
 ```
 
-### `/get_config`
+### `/api/get_ap_config`
 
 - **方法：** `GET`
 - **描述：** 获取当前 ESP32 设备的网络状态。
 - **请求参数：** 无
 - **响应：**
 
-```json
+```json response
 {
     "ap_ssid":"ESP32-Access-Point",     // 设备WiFi-AP模式下的SSID
     "ap_password":"123456789",          // 设备WiFi-AP模式下的Password
 }
+```
 ### `/get_ratio_config`
 
 - **方法：** `GET`
@@ -70,71 +104,15 @@
 - **请求参数：** 无
 - **响应：**
 
-```json
+```json response
 {
-    "ratio":"50",     // 减速箱减速比
+    "ratio_RA":"50",     // RA轴减速箱减速比
+    "ratio_DEC":"50",    // DEC轴减速箱减速比
     
 }
 ```
 
-### `/get_time`
-
-- **方法：** `GET`
-- **描述：** 获取当前 ESP32 设备的时间信息。
-- **请求参数：** 无
-- **响应：**
-
-```json
-{
-    "year":2024,    // 2024年
-    "month":5,      // 5月
-    "day":10,       // 10日
-    "hour":20,      // 20时
-    "minute":30,    // 30分
-    "second":27,    // 27秒
-}
-```
-
-### `/get_gps`
-
-- **方法：** `GET`
-- **描述：** 获取当前 ESP32 设备的位置信息。
-- **请求参数：** 无
-- **响应：**
-
-```json
-{
-    "lon_d": 33,
-    "lon_m": 33,
-    "lon_s": 33.3,
-    "lat_d": 44,
-    "lat_m": 44,
-    "lat_s": 44.4
-}
-```
-
-### `/set_status`
-
-- **方法：** `POST`
-- **描述：** 设置当前 ESP32 设备的工作状态。
-- **请求参数：**
-
-```json
-{
-    "direction":0,      // 单电机运行方向（0 = 顺时针，1 = 逆时针，2 = 停止）
-    "speed":12.3        // 单电机运行速度（脉冲赫兹）
-}
-```
-
-- **响应：**
-
-```json
-{
-    "status":"OK"
-}
-```
-
-### `/set_config`
+### `/set_ap_config`
 
 - **方法：** `POST`
 - **描述：** 设置当前 ESP32 设备的网络状态。
@@ -146,7 +124,14 @@
     "ap_password":"123456789",          // 设备WiFi-AP模式下的Password
 }
 ```
-### `/set_ratio_config`
+- **响应：**
+
+```json
+{
+    "status":"OK"
+}
+```
+### `/api/set_ratio_config`
 
 - **方法：** `POST`
 - **描述：** 设置当前赤道仪减速箱减速比。
@@ -154,7 +139,8 @@
 
 ```json
 {
-    "ratio":"50",     // 减速箱减速比
+    "RA_ratio":"50",     // RA轴减速箱减速比
+    "DEC_ratio":"50",     // DEC轴减速箱减速比
    
 }
 ```
@@ -167,57 +153,7 @@
 }
 ```
 
-### `/set_time`
-
-- **方法：** `POST`
-- **描述：** 设置当前 ESP32 设备的时间信息。
-- **请求参数：**
-
-```json
-{
-    "year":2024,    // 2024年
-    "month":5,      // 5月
-    "day":10,       // 10日
-    "hour":20,      // 20时
-    "minute":30,    // 30分
-    "second":27,    // 27秒
-}
-```
-
-- **响应：**
-
-```json
-{
-    "status":"OK"
-}
-```
-
-### `/set_gps`
-
-- **方法：** `POST`
-- **描述：** 设置当前 ESP32 设备的位置信息。
-- **请求参数：**
-
-```json
-{
-    "lon_d": 33,
-    "lon_m": 33,
-    "lon_s": 33.3,
-    "lat_d": 44,
-    "lat_m": 44,
-    "lat_s": 44.4
-}
-```
-
-- **响应：**
-
-```json
-{
-    "status":"OK"
-}
-```
-
-### `/get_RA_DEC_Float`
+<!-- ### `/get_RA_DEC_Float`
 
 - **方法：** `GET`
 - **描述：** 获取当前跟踪星体的赤经和赤纬信息。浮点格式
@@ -300,7 +236,7 @@
 {
     "status":"OK"
 }
-```
+``` -->
 
 ### `/get_EfuseMac`
 
@@ -381,6 +317,106 @@
   }
 }
 ```
+### `/api/pluse_to_target`
+- **方法：** `POST`
+- **描述：**  电机需要移动的脉冲量
+- **请求参数：** 
+- **响应：**
+
+```json
+{
+    "RA": {
+        "step": 114514,
+        "dir": 0 //0=顺时针，1=逆时针，2=停止
+    },
+    "DEC": {
+        "steps": 1145,
+        "dir": 1
+    },
+    "tracking": true //决定移动之后是否开启RA轴自转同步进行追踪
+}
+```
+- **响应**
+
+```json response
+{
+    "status": "moving",
+}
+```
+### `/api/start_tracking`
+- **方法：** `GET`
+- **描述：**  RA开始同步自转跟踪
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+  
+}
+```
+- **响应**
+
+```json response
+{
+    "status": "tracking"
+}
+```
+### `/api/stop_moving`
+- **方法：** `GET`
+- **描述：**  停止全部电机的运动
+- **请求参数：** 无
+- **响应：**
+
+```json
+{
+  
+}
+```
+- **响应**
+
+```json response
+{
+    "status": "stopped"
+}
+```
+### `/api/set_current_motor_position`
+- **方法：** `POST`
+- **描述：**  初始化当前电机位置
+- **请求参数：** 
+- **响应：**
+
+```json
+{
+    "RA":0,
+    "DEC":0
+  
+}
+```
+- **响应**
+
+```json response
+{
+    "status": "ok"
+}
+```
+### `/api/get_motor_status`
+- **方法：** `POST`
+- **描述：**  获取当前电机位置
+- **请求参数：** 
+- **响应：**
+
+```json
+{
+}
+```
+- **响应**
+
+```json response
+{
+    "RA": 114,
+    "DEC": 514
+}
+
 
 ## 错误代码
 
@@ -402,6 +438,12 @@
 * v1.1.2：调整了HTTP_GET部分的路由，优化代码可读性和维护性。在Configuration.h头部的注释部分补充了DM542C驱动的细分表。按照FreeRTOS的文档建议，调整了 `task_Move_RA`和 `task_Move_DEC`的 `parameters`传递方式。
 * v1.1.3：新增了 `/update`接口的备忘说明。
 * v1.1.4：新增了 `/get_ChipDiagnostics`，用于获取当前ESP32芯片的相关参数。新增了`/get_SystemStatus`，用于获取当前系统状态。
+* v2.0.0 重构了部分API以适应新架构，当前计算量将从后端转移至前端本地,由计算得出需要向后端传递的脉冲量驱使点击运动，当前API设计的问题：
+    -如何在前端实现电机步数同步（得出电机现有位置）
+    -如何初始化电机位置
+    -是否提供同步API以纠正可能的手工调整或自然扰动
+    -是否提供手动同步API
+    
 
 ### 更新内容：
 
