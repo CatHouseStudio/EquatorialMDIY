@@ -68,13 +68,18 @@ void task_AsyncWebServer(void *parameters)
 {
     WiFi_AP_Init();
     WiFi_STA_Init();
+    Serial0_Println("Setting WebServerEvent");
     WebServerEvent();
+    Serial0_Println("Setting ElegantOTA...");
     ElegantOTA.begin(&server); // Start ElegantOTA
     // ElegantOTA callbacks
     ElegantOTA.onStart(onOTAStart);
     ElegantOTA.onProgress(onOTAProgress);
     ElegantOTA.onEnd(onOTAEnd);
+    Serial0_Println("Set ElegantOTA Finished!");
+    Serial0_Println("Start Server...");
     server.begin();
+    Serial0_Println("Server Started!");
     for (;;)
     {
         ElegantOTA.loop();
