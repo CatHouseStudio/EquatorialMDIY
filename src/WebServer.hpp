@@ -116,11 +116,6 @@ void onOTAEnd(bool success)
 void WebServerEvent()
 {
 	Serial0_Println("registering Web Server Event");
-	if (!SPIFFS.begin(true))
-	{
-		Serial0_Println("An Error has occurred while mounting SPIFFS");
-		return;
-	}
 	server.addMiddleware(new LoggingMiddleware());
 	// Route to load static resource
 	server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -243,24 +238,23 @@ void handleGetRA_DEC_Float(AsyncWebServerRequest *request) // GET http://localho
 }
 void handleGetConfig(AsyncWebServerRequest *request) // GET http://localhost:3000/get_config
 {
-	File configFile = SPIFFS.open("/Config.json", "r");
 	JsonDocument configJson;
-	DeserializationError configFileerror = deserializeJson(configJson, configFile);
-	if (configFileerror)
+	bool ok = ReadJsonFromFile(fs_path_config, configJson);
+	if (ok)
+	{
+		// make resp json object
+		JsonDocument respJson;
+		respJson["ssid"] = configJson["ssid"];
+		respJson["pwd"] = configJson["pwd"];
+		String response;
+		serializeJson(respJson, response);
+		request->send(200, "application/json", response);
+	}
+	else
 	{
 		request->send(400, "text/plain", "Invalid JSON on SPIFFS");
 		return;
 	}
-	configFile.close();
-
-	// make resp json object
-	JsonDocument respJson;
-	respJson["ssid"] = configJson["ssid"];
-	respJson["pwd"] = configJson["pwd"];
-	respJson["ratio"] = configJson["ratio"];
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
 }
 void handleGetStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/get_status
 {
@@ -309,7 +303,8 @@ void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost
 		String response;
 		serializeJson(respJson, response);
 		request->send(200, "application/json", response);
-	}else // This should not happen.....
+	}
+	else // This should not happen.....
 	{
 		request->send(503, "text/plain", "No MPU data");
 	}
@@ -540,6 +535,7 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
 {
 	// check req json validation
 	JsonDocument reqJson;
+
 	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
 	if (reqJsonerror)
 	{
@@ -549,20 +545,24 @@ void handleSetConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, 
 
 	String ap_ssid = reqJson["ssid"];
 	String ap_pwd = reqJson["pwd"];
-	int ratio = reqJson["ratio"];
-	//! Write your logic here
-	// Write Config to SPIFFS
-	File configFile = SPIFFS.open("/Config.json", "w");
-	serializeJson(reqJson, configFile);
-	configFile.close();
-	//! Warning: never setting ssid as empty string
-	WiFi_AP_Reboot(ap_ssid, ap_pwd);
-	// make resp json object
 	JsonDocument respJson;
-	respJson["status"] = "OK";
 	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
+	if (ap_ssid.equals("")) // system error, ssid should not be empty
+	{
+		// make resp json object
+		respJson["status"] = "ap_ssid should not be empty!";
+		request->send(400, "application/json", response);
+	}
+	else
+	{
+		//! Warning: never setting ssid as empty string
+		WiFi_AP_Reboot(ap_ssid, ap_pwd);
+		bool ok = WriteJsonToFile(fs_path_config, reqJson);
+		// make resp json object
+		respJson["status"] = "OK";
+		serializeJson(respJson, response);
+		request->send(200, "application/json", response);
+	}
 }
 void handleSetRA_DEC_Float(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/set_RA_DEC_Float
 {
