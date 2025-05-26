@@ -17,11 +17,11 @@ void WiFi_STA_Init()
     // esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     WiFi.begin(sta_ssid, sta_passwd);
 
-    uint8_t retry_times=0;
+    uint8_t retry_times = 0;
 
     Serial0_Println("Setting STA (Station)…");
-    while (WiFi.status() != WL_CONNECTED&&retry_times<5)
-    {   
+    while (WiFi.status() != WL_CONNECTED && retry_times < 5)
+    {
         Serial0_Println("Retry Connect to STA...");
         ++retry_times;
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -43,12 +43,13 @@ void WiFi_AP_Init()
     const char *default_ap_ssid = "ESP32-Access-Point";
     const char *default_ap_password = "123456789";
     // Read config.json from SPIFFS
-    if (SPIFFS.begin(true))
+    JsonDocument configJson;
+    bool ok = ReadJsonFromFile(fs_path_config, configJson);
+    if (ok)
     {
-        File configFile = SPIFFS.open("/Config.json");
-        if (!configFile)
+        if (!configJson["ssid"].is<String>() || !configJson["pwd"].is<String>())
         {
-            Serial0_Println("Failed to open JSON file, Using default configuration");
+            Serial0_Println("Invalid Json content, Using default configuration");
             Serial0_Println("Setting AP (Access Point)…");
             WiFi.softAP(default_ap_ssid, default_ap_password);
             WiFi.softAPConfig(localIP, gateway, subnet);
@@ -56,38 +57,11 @@ void WiFi_AP_Init()
             Serial0_Println(WiFi.softAPIP().toString());
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
-        else
-        {
-            JsonDocument configJson;
-            DeserializationError error = deserializeJson(configJson, configFile);
-            if (error || !configJson["ssid"].is<String>() || !configJson["pwd"].is<String>())
-            {
-                Serial0_Println("Invalid Json content, Using default configuration");
-                Serial0_Println("Setting AP (Access Point)…");
-                WiFi.softAP(default_ap_ssid, default_ap_password);
-                WiFi.softAPConfig(localIP, gateway, subnet);
-                Serial0_Print("AP IP address: ");
-                Serial0_Println(WiFi.softAPIP().toString());
-                vTaskDelay(100 / portTICK_PERIOD_MS);
-            }
-            else
-            {
-                Serial0_Println("Using customize configuration");
-                Serial0_Println("Setting AP (Access Point)…");
-                String ap_ssid = configJson["ssid"];
-                String ap_pwd = configJson["pwd"];
-                WiFi.softAP(ap_ssid, ap_pwd);
-                WiFi.softAPConfig(localIP, gateway, subnet);
-                Serial0_Print("AP IP address: ");
-                Serial0_Println(WiFi.softAPIP().toString());
-                vTaskDelay(100 / portTICK_PERIOD_MS);
-            }
-        }
-        configFile.close();
     }
     else
     {
-        Serial0_Println("Failed to initialize SPIFFS, Using default configuration");
+        // If in this case, SPIFFS is OK, but the JSON file is error
+        Serial0_Println("JSON file error, Using default configuration");
         Serial0_Println("Setting AP (Access Point)…");
         WiFi.softAP(default_ap_ssid, default_ap_password);
         WiFi.softAPConfig(localIP, gateway, subnet);
