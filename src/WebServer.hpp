@@ -128,26 +128,42 @@ void WebServerEvent()
 			  { request->send(SPIFFS, "/main.equatorial.js", "application/javascript"); });
 	server.on("/asset-manifest.json", HTTP_GET, [](AsyncWebServerRequest *request)
 			  { request->send(SPIFFS, "/asset-manifest.json", "application/json"); });
-
-	// Get Config
-	server.on("/api/get_ap_config", HTTP_GET, handleGetAPConfig);
 	// Get Status
-	server.on("/get_status", HTTP_GET, handleGetStatus);
-	// Get EfuseMac
-	server.on("/get_EfuseMac", HTTP_GET, handleGetEfuseMac);
+	server.on("/api/get_status", HTTP_GET, handleGetStatus);
+	// Get AP Config
+	server.on("/api/get_ap_config", HTTP_GET, handleGetAPConfig);
+	// Get Ratio Config
+	server.on("/api/get_ratio_config", HTTP_GET, handleGetRatioConfig);
 	// Get TiltFusion MPU6050
 	server.on("/api/get_TiltFusion", HTTP_GET, handleGetTiltFusion);
-	// Get Chip Diagnostics
-	server.on("/get_ChipDiagnostics", HTTP_GET, handleGetChipDiagnostics);
 	// Get System Status
 	server.on("/get_SystemStatus", HTTP_GET, handleGetSystemStatus);
+	// Start Tracking
+	server.on("/api/start_tracking", HTTP_GET, handleStartTracking);
+	// Stop Moving
+	server.on("/api/stop_moving", HTTP_GET, handleStopMoving);
+	// Get Motor Status
+	server.on("/api/get_motor_status", HTTP_GET, handleGetMotorStatus);
+
+	// Get EfuseMac
+	server.on("/get_EfuseMac", HTTP_GET, handleGetEfuseMac);
+	// Get Chip Diagnostics
+	server.on("/get_ChipDiagnostics", HTTP_GET, handleGetChipDiagnostics);
+
 	// Register POST API
-	server.on("/set_status", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleSetStatus);
 	server.on("/api/set_ap_config", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleSetAPConfig);
+	server.on("/api/set_ratio_config", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleSetRatioConfig);
+	server.on("/api/pluse_to_target", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handlePluseToTarget);
+	server.on("/api/set_current_motor_position", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleSetCurrentMotorPostion);
+
 	Serial0_Println("register Web Server Event Finished!");
 }
 
 // HTTP_GET
+void handleGetStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_status
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
 void handleGetAPConfig(AsyncWebServerRequest *request) // GET http://localhost:3000/get_config
 {
 	JsonDocument configJson;
@@ -168,17 +184,9 @@ void handleGetAPConfig(AsyncWebServerRequest *request) // GET http://localhost:3
 		return;
 	}
 }
-
-void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3000/get_EfuseMac
+void handleGetRatioConfig(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_ratio_config
 {
-	uint64_t chipId = ESP.getEfuseMac();
-	char chipIdStr[17];
-	sprintf(chipIdStr, "%012llX", chipId);
-	JsonDocument respJson;
-	respJson["EfuseMac"] = chipIdStr;
-	String response;
-	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
+	request->send(500, "application/json", "API not Implement!!!");
 }
 void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_TiltFusion
 {
@@ -199,7 +207,34 @@ void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost
 		request->send(503, "text/plain", "No MPU data");
 	}
 }
+void handleGetSystemStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_SystemStatus
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
+void handleStartTracking(AsyncWebServerRequest *request) // GET http://localhost:3000/api/start_tracking
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
+void handleStopMoving(AsyncWebServerRequest *request) // GET http://localhost:3000/api/stop_moving
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
+void handleGetMotorStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_motot_status
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
 
+void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3000/get_EfuseMac
+{
+	uint64_t chipId = ESP.getEfuseMac();
+	char chipIdStr[17];
+	sprintf(chipIdStr, "%012llX", chipId);
+	JsonDocument respJson;
+	respJson["EfuseMac"] = chipIdStr;
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
+}
 void handleGetChipDiagnostics(AsyncWebServerRequest *request) // GET http://localhost:3000/get_ChipDiagnostics
 {
 	esp_chip_info_t chip_info;
@@ -273,4 +308,16 @@ void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len
 			request->send(200, "application/json", response);
 		}
 	}
+}
+void handleSetRatioConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/set_ratio_config
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
+void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/pluse_to_target
+{
+	request->send(500, "application/json", "API not Implement!!!");
+}
+void handleSetCurrentMotorPostion(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/set_current_motor_position
+{
+	request->send(500, "application/json", "API not Implement!!!");
 }
