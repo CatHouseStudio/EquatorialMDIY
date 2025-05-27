@@ -135,8 +135,6 @@ const uint8_t Serial0_Max_Queue_Length = 20;
 // SPIFFS Path
 const char *fs_path_config = "/Config.json";
 
-// SPIFFS Mutex
-SemaphoreHandle_t semphr_SPIFFS_Mutex = NULL; // RTOS互斥锁
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
@@ -145,69 +143,6 @@ inline void Initialize_Pin() // This function is used for Initializing
     pinMode(Pin_Stepper_RA_Step, OUTPUT);
     pinMode(Pin_Stepper_DEC_Dir, OUTPUT);
     pinMode(Pin_Stepper_DEC_Step, OUTPUT);
-    // Create SPIFFS MUTEX
-    semphr_SPIFFS_Mutex = xSemaphoreCreateMutex();
-    if (!SPIFFS.begin(true))
-    {
-        ets_printf("\n[PANIC] %s\n", "SPIFFS Error");
-        abort(); // SPIFFS ERROR, System Panic
-    }
-}
-
-inline File ReadFile(const char *path)
-{
-    File file;
-    if (xSemaphoreTake(semphr_SPIFFS_Mutex, portMAX_DELAY) == pdTRUE)
-    {
-        file = SPIFFS.open(path, "r");
-        xSemaphoreGive(semphr_SPIFFS_Mutex);
-    }
-    return file; // 由调用者判断是否打开成功
-}
-
-inline File WriteFile(const char *path)
-{
-    File file;
-    if (xSemaphoreTake(semphr_SPIFFS_Mutex, portMAX_DELAY) == pdTRUE)
-    {
-        file = SPIFFS.open(path, "w");
-        xSemaphoreGive(semphr_SPIFFS_Mutex);
-    }
-    return file; // 同样由调用者负责 close
-}
-
-inline bool WriteJsonToFile(const char *path, JsonDocument &doc)
-{
-    bool success = false;
-    if (xSemaphoreTake(semphr_SPIFFS_Mutex, portMAX_DELAY) == pdTRUE)
-    {
-        File file = SPIFFS.open(path, "w");
-        if (file)
-        {
-            serializeJson(doc, file);
-            file.close();
-            success = true;
-        }
-        xSemaphoreGive(semphr_SPIFFS_Mutex);
-    }
-    return success;
-}
-
-inline bool ReadJsonFromFile(const char *path, JsonDocument &doc)
-{
-    bool success = false;
-    if (xSemaphoreTake(semphr_SPIFFS_Mutex, portMAX_DELAY) == pdTRUE)
-    {
-        File file = SPIFFS.open(path, "r");
-        if (file)
-        {
-            DeserializationError err = deserializeJson(doc, file);
-            file.close();
-            success = !err;
-        }
-        xSemaphoreGive(semphr_SPIFFS_Mutex);
-    }
-    return success;
 }
 
 // Beta vTaskDelayMicroseconds, for better status, us>=100

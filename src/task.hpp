@@ -1,5 +1,6 @@
 #pragma once
 #include "Configuration.h"
+#include "SpiffsService.hpp"
 #include "SerialMessage.hpp"
 #include "WebServer.hpp"
 
@@ -20,7 +21,7 @@ void task_Create(void)
 {
     Initialize_Pin();
     Serial0_Message_Init();
-
+    InitSpiffsService();
     xTaskCreate(
         task_AsyncWebServer,
         "AsyncWebServer Start",
@@ -86,4 +87,3 @@ void task_AsyncWebServer(void *parameters)
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
-

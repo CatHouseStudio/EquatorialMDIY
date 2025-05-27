@@ -3,6 +3,7 @@
 #include <esp_wifi.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
+#include "SpiffsService.hpp"
 void WiFi_AP_Init();
 void WiFi_AP_Reboot(String ap_ssid, String ap_pwd);
 void WiFi_STA_Init();

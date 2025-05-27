@@ -2,6 +2,7 @@
 #include <ESPAsyncWebServer.h>
 #include <ElegantOTA.h>
 #include "SerialMessage.hpp"
+#include "SpiffsService.hpp"
 #include "WiFiApSta.hpp"
 #include "CelestialPositioning.hpp"
 // #include "GPSInfo.hpp"
@@ -300,12 +301,12 @@ void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len
 		else
 		{
 			//! Warning: never setting ssid as empty string
-			WiFi_AP_Reboot(ap_ssid, ap_pwd);
 			bool ok = WriteJsonToFile(fs_path_config, reqJson);
 			// make resp json object
 			respJson["status"] = "OK";
 			serializeJson(respJson, response);
 			request->send(200, "application/json", response);
+			WiFi_AP_Reboot(ap_ssid, ap_pwd);
 		}
 	}
 }
