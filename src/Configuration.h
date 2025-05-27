@@ -121,12 +121,12 @@ const unsigned long Serial_GPS_Bit_Rate = 4800;
 const uint8_t Stepper_RA_Initialize_Dir = HIGH;
 const uint8_t Stepper_RA_Work_Dir = LOW;
 const uint32_t Stepper_RA_DelayMs = 250;
-const float Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
+const int Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
 // DEC Stepper
 const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
 const uint8_t Stepper_DEC_Work_Dir = LOW;
 const uint32_t Stepper_DEC_DelayMs = 250;
-const float Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
+const int Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
 
 // Serial 0 Config
 const uint8_t Serial0_Max_Message_Length = 100;
@@ -134,7 +134,6 @@ const uint8_t Serial0_Max_Queue_Length = 20;
 
 // SPIFFS Path
 const char *fs_path_config = "/Config.json";
-
 
 inline void Initialize_Pin() // This function is used for Initializing
 {

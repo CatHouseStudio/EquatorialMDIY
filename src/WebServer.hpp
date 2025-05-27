@@ -187,7 +187,7 @@ void handleGetAPConfig(AsyncWebServerRequest *request) // GET http://localhost:3
 }
 void handleGetRatioConfig(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_ratio_config
 {
-	request->send(500, "application/json", "API not Implement!!!");
+	request->send(500, "application/json", "API Deprecated!!!");
 }
 void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_TiltFusion
 {
@@ -218,7 +218,13 @@ void handleStartTracking(AsyncWebServerRequest *request) // GET http://localhost
 }
 void handleStopMoving(AsyncWebServerRequest *request) // GET http://localhost:3000/api/stop_moving
 {
-	request->send(500, "application/json", "API not Implement!!!");
+	Stepper_RA_Stop();
+	Stepper_DEC_Stop();
+	JsonDocument respJson;
+	respJson["status"] = "stopped";
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
 }
 void handleGetMotorStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_motot_status
 {
@@ -312,7 +318,7 @@ void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len
 }
 void handleSetRatioConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/set_ratio_config
 {
-	request->send(500, "application/json", "API not Implement!!!");
+	request->send(500, "application/json", "API Deprecated!!!");
 }
 void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/pluse_to_target
 {
