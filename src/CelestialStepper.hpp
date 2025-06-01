@@ -111,6 +111,7 @@ void task_Stepper_RA(void *parameters)
                 { // We got a ACTION_STOP notify!
                     if (notifyValue == ACTION_STOP)
                     {
+                        cmd.tracking = false;
                         break;
                     }
                 }
@@ -175,6 +176,7 @@ void task_Stepper_DEC(void *parameters)
                 { // We got a ACTION_STOP notify!
                     if (notifyValue == ACTION_STOP)
                     {
+                        cmd.tracking = false;
                         break;
                     }
                 }
