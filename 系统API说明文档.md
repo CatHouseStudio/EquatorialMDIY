@@ -18,10 +18,10 @@
 | `/api/get_ratio_config`           | `GET`  | 获取当前设备减速箱速比                       | API 遗弃                                 |
 | `/api/set_ratio_config`           | `POST` | 设置当前使用RA轴与DEC轴的减速箱减速比        | API 遗弃                                 |
 | `/api/get_TiltFusion`             | `GET`  | 获取当前相机的空间姿态                       | ESP32的SDA为Pin-21，SCL为Pin-22  已完成 |
-| `/api/update`                     | `GET`  | 固件和SPIFFS文件的OTA更新                    | 专用页面                                 |
-| `/api/get_SystemStatus`           | `GET`  | 获取当前系统状态                             |                                          |
+| `/update`                         | `GET`  | 固件和SPIFFS文件的OTA更新                    | 专用页面                                 |
+| `/api/get_SystemStatus`           | `GET`  | 获取当前系统状态                             | 已完成                                   |
 | `/api/start_tracking`             | `GET`  | 定位到目标天体后启动RA轴同步地球自转跟踪天体 |                                          |
-| `/api/pluse_to_target`            | `POST` | 前端计算完位移量后发送给后端进行电机驱动     |                                          |
+| `/api/pluse_to_target`            | `POST` | 前端计算完位移量后发送给后端进行电机驱动     | 已完成                                   |
 | `/api/stop_moving`                | `GET`  | 停止全部电机的运动                           | 已完成                                   |
 | `/api/set_current_motor_position` | `POST` | 初始化电机步数                               |                                          |
 | `/api/get_motor_status`           | `GET`  | 获取当前电机位置                             |                                          |
@@ -61,7 +61,7 @@
 }
 ```
 
-### `/get_ratio_config`
+### `/api/get_ratio_config`
 
 - **方法：** `GET`
 - **描述：** 获取当前赤道仪减速箱减速比。
@@ -75,7 +75,7 @@
 }
 ```
 
-### `/set_ap_config`
+### `/api/set_ap_config`
 
 - **方法：** `POST`
 - **描述：** 设置当前 ESP32 设备的网络状态。
@@ -117,92 +117,7 @@
 }
 ```
 
-<!-- ### `/get_RA_DEC_Float`
-
-- **方法：** `GET`
-- **描述：** 获取当前跟踪星体的赤经和赤纬信息。浮点格式
-- **请求参数：** 无
-- **响应：**
-
-```json
-{
-
-    "ra":13.25,    // 赤经
-    "dec":45.75   // 赤纬
-}
-```
-
-### `/get_RA_DEC_HDMS`
-
-- **方法：** `GET`
-- **描述：** 获取当前跟踪星体的赤经和赤纬信息。HDMS格式
-- **请求参数：** 无
-- **响应：**
-
-```json
-{
-
-    "ra_h":13,    // 赤经
-    "ra_m":15,    // 赤经
-    "ra_s":30.0,    // 赤经
-  
-    "dec_d":45,   // 赤纬
-    "dec_m":30,   // 赤纬
-    "dec_s":0.0,   // 赤纬
-
-}
-```
-
-### `/set_RA_DEC_Float`
-
-- **方法：** `POST`
-- **描述：** 设置当前跟踪星体的赤经和赤纬信息。浮点格式
-- **请求参数：**
-
-```json
-{
-    "ra":13.25,    // 赤经
-    "dec":45.75   // 赤纬
-}
-```
-
-- **响应：**
-
-```json
-{
-    "status":"OK"
-}
-```
-
-### `/set_RA_DEC_HDMS`
-
-- **方法：** `POST`
-- **描述：** 设置当前跟踪星体的赤经和赤纬信息。HDMS格式
-- **请求参数：**
-
-```json
-{
-
-    "ra_h":13,    // 赤经
-    "ra_m":15,    // 赤经
-    "ra_s":30.0,    // 赤经
-  
-    "dec_d":45,   // 赤纬
-    "dec_m":30,   // 赤纬
-    "dec_s":0.0,   // 赤纬
-
-}
-```
-
-- **响应：**
-
-```json
-{
-    "status":"OK"
-}
-``` -->
-
-### `/get_EfuseMac`
+### `/api/get_EfuseMac`
 
 - **方法：** `GET`
 - **描述：** 获取当前 ESP32 设备的芯片ID。
@@ -216,7 +131,7 @@
 
 ```
 
-### `/get_TiltFusion`
+### `/api/get_TiltFusion`
 
 - **方法：** `GET`
 - **描述：** 获取当前相机的空间姿态。
@@ -231,7 +146,7 @@
 }
 ```
 
-### `/get_ChipDiagnostics`
+### `/api/get_ChipDiagnostics`
 
 - **方法：** `GET`
 - **描述：** 获取当前ESP32芯片的相关参数。
@@ -260,7 +175,7 @@
 }
 ```
 
-### `/get_SystemStatus`
+### `/api/get_SystemStatus`
 
 - **方法：** `GET`
 - **描述：** 获取当前系统状态
@@ -364,7 +279,6 @@
 {
     "RA":0,
     "DEC":0
-  
 }
 ```
 
@@ -385,6 +299,7 @@
 
 ```json
 {
+  
 }
 ```
 

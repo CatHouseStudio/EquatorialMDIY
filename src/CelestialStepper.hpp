@@ -18,8 +18,8 @@ enum MoveAction
 
 enum StepperDirection
 {
-    DIR_INIT,
-    DIR_WORK
+    DIR_WORK,
+    DIR_INIT
 };
 
 struct MoveCommand
@@ -28,6 +28,7 @@ struct MoveCommand
     StepperDirection dir;
     uint32_t pulse_count;
     uint32_t delay_us;
+    bool tracking;
 };
 
 uint32_t Pulse_RA(float azimuth);
@@ -103,21 +104,6 @@ void task_Stepper_RA(void *parameters)
 
             uint32_t notifyValue = 0;
 
-            while (cmd.action == ACTION_CONTINUOUS)
-            {
-                if (xTaskNotifyWait(0, 0, &notifyValue, 0) == pdPASS)
-                { // We got a ACTION_STOP notify!
-                    if (notifyValue == ACTION_STOP)
-                    {
-                        break;
-                    }
-                }
-                digitalWrite(Pin_Stepper_RA_Step, HIGH);
-                DelayUs(cmd.delay_us);
-                digitalWrite(Pin_Stepper_RA_Step, LOW);
-                DelayUs(cmd.delay_us);
-            }
-
             uint32_t i = 0;
             while (cmd.action == ACTION_POSITION && i < cmd.pulse_count)
             {
@@ -133,6 +119,21 @@ void task_Stepper_RA(void *parameters)
                 digitalWrite(Pin_Stepper_RA_Step, LOW);
                 DelayUs(Stepper_RA_DelayMs);
                 ++i;
+            }
+
+            while ((cmd.action == ACTION_CONTINUOUS) || (cmd.action == ACTION_POSITION && cmd.tracking))
+            {
+                if (xTaskNotifyWait(0, 0, &notifyValue, 0) == pdPASS)
+                { // We got a ACTION_STOP notify!
+                    if (notifyValue == ACTION_STOP)
+                    {
+                        break;
+                    }
+                }
+                digitalWrite(Pin_Stepper_RA_Step, HIGH);
+                DelayUs(cmd.delay_us);
+                digitalWrite(Pin_Stepper_RA_Step, LOW);
+                DelayUs(cmd.delay_us);
             }
             xTaskNotifyStateClear(NULL);
             set_Stepper_RA_running(false);
@@ -167,21 +168,6 @@ void task_Stepper_DEC(void *parameters)
 
             uint32_t notifyValue = 0;
 
-            while (cmd.action == ACTION_CONTINUOUS)
-            {
-                if (xTaskNotifyWait(0, 0, &notifyValue, 0) == pdPASS)
-                { // We got a ACTION_STOP notify!
-                    if (notifyValue == ACTION_STOP)
-                    {
-                        break;
-                    }
-                }
-                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
-                DelayUs(cmd.delay_us);
-                digitalWrite(Pin_Stepper_DEC_Step, LOW);
-                DelayUs(cmd.delay_us);
-            }
-
             uint32_t i = 0;
             while (cmd.action == ACTION_POSITION && i < cmd.pulse_count)
             {
@@ -198,6 +184,22 @@ void task_Stepper_DEC(void *parameters)
                 DelayUs(Stepper_DEC_DelayMs);
                 ++i;
             }
+
+            while ((cmd.action == ACTION_CONTINUOUS) || (cmd.action == ACTION_POSITION && cmd.tracking))
+            {
+                if (xTaskNotifyWait(0, 0, &notifyValue, 0) == pdPASS)
+                { // We got a ACTION_STOP notify!
+                    if (notifyValue == ACTION_STOP)
+                    {
+                        break;
+                    }
+                }
+                digitalWrite(Pin_Stepper_DEC_Step, HIGH);
+                DelayUs(cmd.delay_us);
+                digitalWrite(Pin_Stepper_DEC_Step, LOW);
+                DelayUs(cmd.delay_us);
+            }
+            xTaskNotifyStateClear(NULL);
             set_Stepper_DEC_running(false);
         }
     }

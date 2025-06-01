@@ -68,8 +68,8 @@ void handleStopMoving(AsyncWebServerRequest *request);		// GET http://localhost:
 void handleGetMotorStatus(AsyncWebServerRequest *request);	// GET http://localhost:3000/api/get_motot_status
 
 //!! API document Need fix!!
-void handleGetChipDiagnostics(AsyncWebServerRequest *request); // GET http://localhost:3000/get_ChipDiagnostics
-void handleGetEfuseMac(AsyncWebServerRequest *request);		   // GET http://localhost:3000/get_EfuseMac
+void handleGetChipDiagnostics(AsyncWebServerRequest *request); // GET http://localhost:3000/api/get_ChipDiagnostics
+void handleGetEfuseMac(AsyncWebServerRequest *request);		   // GET http://localhost:3000/api/get_EfuseMac
 // HTTP_POST
 void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);			  // POST http://localhost:3000/api/set_ap_config
 void handleSetRatioConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);		  // POST http://localhost:3000/api/set_ratio_config
@@ -194,7 +194,6 @@ void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost
 	MPUResult mpuResult;
 	if (GetLatestMPU(mpuResult))
 	{
-
 		JsonDocument respJson;
 		respJson["roll"] = mpuResult.roll;
 		respJson["pitch"] = mpuResult.pitch;
@@ -210,7 +209,73 @@ void handleGetTiltFusion(AsyncWebServerRequest *request) // GET http://localhost
 }
 void handleGetSystemStatus(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_SystemStatus
 {
-	request->send(500, "application/json", "API not Implement!!!");
+	JsonDocument respJson;
+
+	// System Uptime
+	respJson["uptime_ms"] = millis();
+
+	// Usage of heap
+	respJson["heap"]["total_bytes"] = ESP.getHeapSize();
+	respJson["heap"]["free_bytes"] = ESP.getFreeHeap();
+	respJson["heap"]["min_free_bytes"] = esp_get_minimum_free_heap_size();
+
+	//  RTOS Tick and Number of task
+	respJson["rtos"]["tick_rate_hz"] = configTICK_RATE_HZ;
+	respJson["rtos"]["task_count"] = uxTaskGetNumberOfTasks();
+
+	// Stack Status of Each Task
+	/*
+	!Warning Builtin Precompiled ESP-IDF NOT Support!
+	Enable these flags under build_flags in platformio.ini
+		-DconfigGENERATE_RUN_TIME_STATS=1
+		-DconfigUSE_STATS_FORMATTING_FUNCTIONS=1
+		-DconfigUSE_TRACE_FACILITY=1
+	*/
+	// UBaseType_t taskCount = uxTaskGetNumberOfTasks();
+	// TaskStatus_t *status_array = (TaskStatus_t *)pvPortMalloc(taskCount * sizeof(TaskStatus_t));
+	// if (status_array)
+	// {
+	// 	taskCount = uxTaskGetSystemState(status_array, taskCount, NULL);
+	// 	JsonArray taskArr = respJson["tasks"].to<JsonArray>();
+
+	// 	for (UBaseType_t i = 0; i < taskCount; i++)
+	// 	{
+	// 		JsonObject taskObj = taskArr.add<JsonObject>();
+	// 		taskObj["name"] = status_array[i].pcTaskName;
+	// 		taskObj["stack_remaining_bytes"] = status_array[i].usStackHighWaterMark * sizeof(StackType_t);
+	// 		taskObj["priority"] = status_array[i].uxCurrentPriority;
+	// 	}
+	// 	vPortFree(status_array);
+	// }
+
+	// CPU Time status
+	/*
+	!Warning Builtin Precompiled ESP-IDF NOT Support!
+	Enable these flags under build_flags in platformio.ini
+		-DconfigGENERATE_RUN_TIME_STATS=1
+		-DconfigUSE_STATS_FORMATTING_FUNCTIONS=1
+		-DconfigUSE_TRACE_FACILITY=1
+	*/
+
+	// #if (configGENERATE_RUN_TIME_STATS == 1)
+	// 	char *stats_buffer = (char *)pvPortMalloc(1024);
+	// 	if (stats_buffer)
+	// 	{
+	// 		vTaskGetRunTimeStats(stats_buffer);
+	// 		respJson["rtos"]["runtime_stats"] = stats_buffer;
+	// 		vPortFree(stats_buffer);
+	// 	}
+	// 	else
+	// 	{
+	// 		respJson["rtos"]["runtime_stats"] = "malloc failed";
+	// 	}
+	// #else
+	// 	respJson["rtos"]["runtime_stats"] = "disabled";
+	// #endif
+
+	String response;
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
 }
 void handleStartTracking(AsyncWebServerRequest *request) // GET http://localhost:3000/api/start_tracking
 {
@@ -231,7 +296,7 @@ void handleGetMotorStatus(AsyncWebServerRequest *request) // GET http://localhos
 	request->send(500, "application/json", "API not Implement!!!");
 }
 
-void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3000/get_EfuseMac
+void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_EfuseMac
 {
 	uint64_t chipId = ESP.getEfuseMac();
 	char chipIdStr[17];
@@ -242,7 +307,7 @@ void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
 }
-void handleGetChipDiagnostics(AsyncWebServerRequest *request) // GET http://localhost:3000/get_ChipDiagnostics
+void handleGetChipDiagnostics(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_ChipDiagnostics
 {
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
@@ -322,7 +387,43 @@ void handleSetRatioConfig(AsyncWebServerRequest *request, uint8_t *data, size_t 
 }
 void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/pluse_to_target
 {
-	request->send(500, "application/json", "API not Implement!!!");
+	// check req json validation
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		request->send(400, "text/plain", "Invalid JSON");
+		return;
+	}
+
+	uint32_t ra_step = reqJson["RA"]["step"];	// 114514
+	uint32_t ra_dir = reqJson["RA"]["dir"];		// 0
+	uint32_t dec_step = reqJson["DEC"]["steps"]; // 1145
+	uint32_t dec_dir = reqJson["DEC"]["dir"];	// 1
+	bool tracking = reqJson["tracking"];	// true
+	MoveCommand cmd_RA = {
+		.action = ACTION_POSITION,
+		.dir = static_cast<StepperDirection>(ra_dir),
+		.pulse_count = ra_step,
+		.delay_us = Stepper_RA_DelayMs,
+		.tracking = tracking};
+	MoveCommand cmd_DEC = {
+		.action = ACTION_POSITION,
+		.dir = static_cast<StepperDirection>(dec_dir),
+		.pulse_count = dec_step,
+		.delay_us = Stepper_DEC_DelayMs,
+		tracking = false}; // In Fact DEC Should not use Tracking MODE
+	bool ok = Stepper_RA_SendCommand(cmd_RA) || Stepper_DEC_SendCommand(cmd_DEC);
+	if (!ok)
+	{
+		request->send(500, "application/json", "Stepper Motor is Running!!!");
+		return;
+	}
+	JsonDocument respJson;
+	String response;
+	respJson["status"] = "moving";
+	serializeJson(respJson, response);
+	request->send(200, "application/json", response);
 }
 void handleSetCurrentMotorPostion(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/set_current_motor_position
 {
