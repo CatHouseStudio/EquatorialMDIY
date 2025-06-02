@@ -135,6 +135,14 @@ const uint8_t Serial0_Max_Queue_Length = 20;
 // SPIFFS Path
 const char *fs_path_config = "/Config.json";
 
+// Wifi STA and AP
+//! you must change the wifi ssid and passwd
+const char *sta_ssid = "";
+const char *sta_passwd = "";
+const char *default_ap_ssid = "ESP32-Access-Point";
+const char *default_ap_password = "123456789";
+
+
 inline void Initialize_Pin() // This function is used for Initializing
 {
     // Stepper

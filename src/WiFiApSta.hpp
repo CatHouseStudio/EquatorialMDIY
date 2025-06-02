@@ -12,10 +12,6 @@ void WiFi_STA_Init()
 {
     WiFi.mode(WIFI_AP_STA);
     // esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
-    //! you must change the wifi ssid and passwd
-    const char *sta_ssid = "ax3000-818";
-    const char *sta_passwd = "fl123456789";
-    // esp_wifi_set_ps(WIFI_PS_MIN_MODEM); // Set Wifi Power Save, if connect not stable, delete this line.
     WiFi.begin(sta_ssid, sta_passwd);
 
     uint8_t retry_times = 0;
@@ -41,8 +37,6 @@ void WiFi_AP_Init()
     IPAddress localIP(192, 168, 4, 1);
     IPAddress gateway(192, 168, 4, 1);
     IPAddress subnet(255, 255, 255, 0);
-    const char *default_ap_ssid = "ESP32-Access-Point";
-    const char *default_ap_password = "123456789";
     // Read config.json from SPIFFS
     JsonDocument configJson;
     bool ok = ReadJsonFromFile(fs_path_config, configJson);
