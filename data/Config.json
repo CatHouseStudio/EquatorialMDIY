@@ -1,5 +1,4 @@
 {
     "ssid": "ESP32-Access-Point",
-    "pwd": "123456789",
-    "ratio": 1
+    "pwd": "123456789"
 }

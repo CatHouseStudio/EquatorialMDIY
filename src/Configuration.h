@@ -121,16 +121,27 @@ const unsigned long Serial_GPS_Bit_Rate = 4800;
 const uint8_t Stepper_RA_Initialize_Dir = HIGH;
 const uint8_t Stepper_RA_Work_Dir = LOW;
 const uint32_t Stepper_RA_DelayMs = 250;
-const float Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
+const int Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
 // DEC Stepper
 const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
 const uint8_t Stepper_DEC_Work_Dir = LOW;
 const uint32_t Stepper_DEC_DelayMs = 250;
-const float Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
+const int Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
 
 // Serial 0 Config
 const uint8_t Serial0_Max_Message_Length = 100;
 const uint8_t Serial0_Max_Queue_Length = 20;
+
+// SPIFFS Path
+const char *fs_path_config = "/Config.json";
+
+// Wifi STA and AP
+//! you must change the wifi ssid and passwd
+const char *sta_ssid = "";
+const char *sta_passwd = "";
+const char *default_ap_ssid = "ESP32-Access-Point";
+const char *default_ap_password = "123456789";
+
 
 inline void Initialize_Pin() // This function is used for Initializing
 {
