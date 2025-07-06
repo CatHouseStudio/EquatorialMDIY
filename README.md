@@ -8,6 +8,8 @@
 * 42步进电机
 * DRV8825驱动板（或类似驱动板）
 * MPU6050
+* INA226
+* SSD1306
 * 电源
 * 若干电线
 
@@ -25,4 +27,3 @@
 * [web_view](https://github.com/CatHouseStudio/EquatorialMDIY/tree/main/web_view)目录中为该项目的react前端代码
 * [天文参数.rest](https://github.com/CatHouseStudio/EquatorialMDIY/tree/main/天文参数.rest)中存放的是几个simbad地外恒星的信息获取url
 * [系统API说明文档](https://github.com/CatHouseStudio/EquatorialMDIY/tree/main/系统API说明文档.md)详细描述了本项目中通过 Web UI 与 ESP32 单片机之间通信的 API 接口
-
