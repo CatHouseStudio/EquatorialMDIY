@@ -43,10 +43,10 @@
     <!-- 设置面板 -->
     <div v-if="showSettings" class="bg-neutral-800 rounded p-4 space-y-1">
       <h2 class="text-lg font-semibold">设备信息</h2>
-      <div>RA 齿轮比：{{ deviceInfo.ra_ratio }}</div>
-      <div>DEC 齿轮比：{{ deviceInfo.dec_ratio }}</div>
-      <div>WiFi 名称：{{ deviceInfo.ssid }}</div>
-      <div>WiFi 密码：{{ deviceInfo.password }}</div>
+      <div>RA 齿轮比：{{ deviceInfo.value.ra_ratio }}</div>
+      <div>DEC 齿轮比：{{ deviceInfo.value.dec_ratio }}</div>
+      <div>WiFi 名称：{{ deviceInfo.value.ssid }}</div>
+      <div>WiFi 密码：{{ deviceInfo.value.password }}</div>
     </div>
   </div>
 </template>
@@ -93,19 +93,23 @@ const track = async () => {
 const loadDeviceInfo = async () => {
  try {
     const [apRes, ratioRes] = await Promise.all([
-      axios.get('/api/get_ap_config'),
-      axios.get('/api/get_ratio_config')
-    ])
+  axios.get('/api/get_ap_config'),
+  axios.get('/api/get_ratio_config')
+])
 
-   deviceInfo.ra_ratio = apRes.data.ratio_RA || '未知'
-   deviceInfo.dec_ratio = apRes.data.ratio_DEC || '未知'
-   deviceInfo.ssid = apRes.data.ap_ssid || '未知'
-   deviceInfo.password = apRes.data.ap_password || '未知'
-   
+// 解构出嵌套字段
+const apData = apRes.data.data || {}
+const ratioData = ratioRes.data.data || {}
+console.log('AP配置:', apData)
+console.log('减速比配置:', ratioData) 
+deviceInfo.value.ra_ratio = ratioData.ratio_RA ?? '未知'  
+deviceInfo.value.dec_ratio = ratioData.ratio_DEC ?? '未知'
+deviceInfo.value.ssid = apData.ap_ssid ?? '未知'
+deviceInfo.value.password = apData.ap_password ?? '未知'  
+console.log('设备信息加载成功', deviceInfo.value)
+
 } catch (err) {
     console.error('加载设备信息失败', err)
-      apConfig.value = { ssid: 'mock-ssid', password: 'mock-password' }
-      ratioConfig.value = { ratio_RA: 'mock-ratio', ratio_DEC: 'mock-ratio' }
   }
 }
 
