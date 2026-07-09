@@ -10,6 +10,7 @@
 #include "I2CWorker.hpp"
 // #include "MagneticDeclination.hpp"
 static AsyncWebServer server(80);
+static AsyncWebSocket ws("/ws");
 unsigned long ota_progress_millis = 0;
 
 class LoggingMiddleware : public AsyncMiddleware
@@ -56,6 +57,9 @@ void onOTAProgress(size_t current, size_t final);
 void onOTAEnd(bool success);
 
 void WebServerEvent();
+// Server Socket API
+void handleWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
+void handleWsJson(AsyncWebSocketClient *client, uint8_t *data, size_t len);
 // Server API events
 // HTTP_GET
 void handleGetStatus(AsyncWebServerRequest *request);		// GET http://localhost:3000/api/get_status
@@ -158,6 +162,70 @@ void WebServerEvent()
 	server.on("/api/set_current_motor_position", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, handleSetCurrentMotorPostion);
 
 	Serial0_Println("register Web Server Event Finished!");
+}
+
+// WebSocket /ws
+void handleWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+{
+	if (type == WS_EVT_CONNECT)
+	{
+		Serial0_Printf("WS client connected: %u\n", client->id());
+		JsonDocument respJson;
+		respJson["status"] = "OK";
+		String response;
+		serializeJson(respJson, response);
+		client->text(response);
+	}
+	if (type == WS_DISCONNECT)
+	{
+		Serial0_Printf("WS client disconnected: %u\n", client->id());
+		return;
+	}
+	if (type == WS_EVT_DATA)
+	{
+		AwsFrameInfo *info = (AwsFrameInfo *)arg;
+		bool isCompleteTextFrame =
+			info->final &&
+			info->index == 0 &&
+			info->len == len &&
+			info->opcode == WS_TEXT;
+		if (!isCompleteTextFrame)
+		{
+			// websocket content error
+			JsonDocument reqJson;
+			DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+			if (reqJsonerror)
+			{
+				client->text("Fragmented WS frame not supported");
+				return;
+			}
+		}
+
+		handleWsJson(client, data, len);
+		return;
+	}
+}
+// WebSocket /ws
+void handleWsJson(AsyncWebSocketClient *client, uint8_t *data, size_t len)
+{
+	JsonDocument reqJson;
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	if (reqJsonerror)
+	{
+		client->text("Invalid JSON");
+		return;
+	}
+	// analyze json to use specific handler .....
+	/*
+		so
+		many
+		codes
+	*/
+	JsonDocument respJson;
+	respJson["status"] = "Websocket Json Response";
+	String response;
+	serializeJson(respJson, response);
+	client->text(response);
 }
 
 // HTTP_GET
@@ -396,11 +464,11 @@ void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t l
 		return;
 	}
 
-	uint32_t ra_step = reqJson["RA"]["step"];	// 114514
-	uint32_t ra_dir = reqJson["RA"]["dir"];		// 0
+	uint32_t ra_step = reqJson["RA"]["step"];	 // 114514
+	uint32_t ra_dir = reqJson["RA"]["dir"];		 // 0
 	uint32_t dec_step = reqJson["DEC"]["steps"]; // 1145
-	uint32_t dec_dir = reqJson["DEC"]["dir"];	// 1
-	bool tracking = reqJson["tracking"];	// true
+	uint32_t dec_dir = reqJson["DEC"]["dir"];	 // 1
+	bool tracking = reqJson["tracking"];		 // true
 	MoveCommand cmd_RA = {
 		.action = ACTION_POSITION,
 		.dir = static_cast<StepperDirection>(ra_dir),

@@ -84,6 +84,7 @@ void task_AsyncWebServer(void *parameters)
     for (;;)
     {
         ElegantOTA.loop();
+        ws.cleanupClients();
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
