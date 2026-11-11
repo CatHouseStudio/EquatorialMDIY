@@ -81,6 +81,7 @@ void task_Stepper_RA(void *parameters)
 {
     queueHandle_Stepper_RA = xQueueCreate(1, sizeof(MoveCommand));
     xTaskHandle_Stepper_RA = xTaskGetCurrentTaskHandle();
+    semphr_Stepper_RA_Mutex= xSemaphoreCreateMutex();
     MoveCommand cmd;
     for (;;)
     {
@@ -146,6 +147,7 @@ void task_Stepper_DEC(void *parameters)
 {
     queueHandle_Stepper_DEC = xQueueCreate(1, sizeof(MoveCommand));
     xTaskHandle_Stepper_DEC = xTaskGetCurrentTaskHandle();
+    semphr_Stepper_DEC_Mutex= xSemaphoreCreateMutex();
     MoveCommand cmd;
     for (;;)
     {
