@@ -117,16 +117,31 @@ const uint8_t Pin_Serial_GPS_RX = 16;
 const uint8_t Pin_Serial_GPS_TX = 17;
 const unsigned long Serial_GPS_Bit_Rate = 4800;
 
+// =============================================
+// Celestial Stepper (RA / DEC) parameters
+//
+// 旧实现用软件翻转 STEP 引脚，一个脉冲是 "STEP 拉高 P µs + STEP 拉低 P µs"，
+// 所以 P 是半步周期，整步周期为 2*P（P=250 时约 2000 步/秒）。
+// 现在脉冲由 FastAccelStepper 的硬件定时器产生，下面的数值保持原来的含义，
+// 步进速率与原来一致。P 改名为 StepHalfPeriodUs：它一直是微秒，从来不是毫秒。
+//
+// The old code bit-banged STEP: one pulse was "STEP high for P us, STEP low for P us",
+// so P is the half period and the full step period is 2*P (P=250 -> about 2000 steps/s).
+// FastAccelStepper now generates the pulse train; these values keep the original meaning
+// so the step rate is unchanged. P was renamed ...Us because it was always microseconds.
+
 // RA Stepper
 const uint8_t Stepper_RA_Initialize_Dir = HIGH;
 const uint8_t Stepper_RA_Work_Dir = LOW;
-const uint32_t Stepper_RA_DelayMs = 250;
-const int Stepper_RA_K = 114514; // Mechanical structure reduction ratio coefficient
+const uint32_t Stepper_RA_StepHalfPeriodUs = 250; // 半步周期 µs（原 Stepper_RA_DelayMs）
+const uint32_t Stepper_RA_Acceleration = 1000000;  // 步/秒²，取大值≈原来的恒速起停
+const int Stepper_RA_K = 114514;                   // Mechanical structure reduction ratio coefficient
 // DEC Stepper
 const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
 const uint8_t Stepper_DEC_Work_Dir = LOW;
-const uint32_t Stepper_DEC_DelayMs = 250;
-const int Stepper_DEC_K = 114514; // Mechanical structure reduction ratio coefficient
+const uint32_t Stepper_DEC_StepHalfPeriodUs = 250; // 半步周期 µs（原 Stepper_DEC_DelayMs）
+const uint32_t Stepper_DEC_Acceleration = 1000000;  // 步/秒²，取大值≈原来的恒速起停
+const int Stepper_DEC_K = 114514;                   // Mechanical structure reduction ratio coefficient
 
 // Serial 0 Config
 const uint8_t Serial0_Max_Message_Length = 100;
@@ -152,30 +167,25 @@ inline void Initialize_Pin() // This function is used for Initializing
     pinMode(Pin_Stepper_DEC_Step, OUTPUT);
 }
 
-// Beta vTaskDelayMicroseconds, for better status, us>=100
-inline void DelayUs(uint32_t us)
-{
-    TaskHandle_t currentTask = xTaskGetCurrentTaskHandle();
-
-    esp_timer_handle_t timer;
-    esp_timer_create_args_t timerArgs = {
-        .callback = [](void *arg)
-        {
-            TaskHandle_t handle = (TaskHandle_t)arg;
-            BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-            xTaskNotifyGive(handle); // ✅ 非 ISR 中调用 notify，安全
-        },
-        .arg = (void *)currentTask,
-        .dispatch_method = ESP_TIMER_TASK, // ✅ 推荐使用方式，兼容所有 Arduino ESP32 版本
-        .name = "delay_us_task"};
-    esp_timer_create(&timerArgs, &timer);
-    esp_timer_start_once(timer, us);
-
-    // 当前任务进入等待
-    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-    esp_timer_delete(timer);
-}
+// =============================================
+// ! DelayUs() has been removed.
+//
+// 它原本用来在软件里给 STEP 脉冲计时，有三处硬伤：
+//   1) 每次调用都 esp_timer_create/delete 一个定时器，2 kHz 步进就是每秒 4000 次
+//      堆分配/释放，长期运行必然碎片化，且创建失败时 timer 未初始化就被 start/delete；
+//   2) 定时器回调走 esp_timer 任务，唤醒 + 通知 + 调度一个来回通常 30~100 µs 且抖动，
+//      比它自己要延时的 250 µs 还接近，实际脉冲周期既不准也不稳；
+//   3) 它和 Stepper_RA_Stop()/Stepper_DEC_Stop() 共用同一个任务通知槽位：
+//      停止请求可能被 ulTaskNotifyTake 吞掉（停止丢失），定时器完成的通知也可能
+//      被 xTaskNotifyWait 读走当成一次假的 ACTION_STOP。
+//
+// 现在 STEP 脉冲由 FastAccelStepper 的硬件定时器产生，停止改用任务通知，
+// 两者不再抢同一个通知槽位，也不再需要这个函数。
+//
+// It is gone because it created/deleted an esp_timer on every call (heap churn at
+// 2 kHz), its latency/jitter was on the same order as the delay it produced, and it
+// shared the task notification slot with the ACTION_STOP mechanism, so a stop could
+// be swallowed. FastAccelStepper now owns the pulse timing.
 // =====================
 // Utility Conversions
 // =====================

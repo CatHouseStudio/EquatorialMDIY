@@ -22,6 +22,8 @@ void task_Create(void)
     Initialize_Pin();
     Serial0_Message_Init();
     InitSpiffsService();
+    // 步进电机的队列/互斥量/引擎必须在两个步进任务创建之前就绪
+    InitCelestialStepper();
     xTaskCreate(
         task_AsyncWebServer,
         "AsyncWebServer Start",

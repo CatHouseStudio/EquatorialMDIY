@@ -377,41 +377,13 @@ void handleGetEfuseMac(AsyncWebServerRequest *request) // GET http://localhost:3
 }
 void handleGetChipDiagnostics(AsyncWebServerRequest *request) // GET http://localhost:3000/api/get_ChipDiagnostics
 {
-	esp_chip_info_t chip_info;
-	esp_chip_info(&chip_info);
-
-	const char *model = "Unknown";
-	switch (chip_info.model)
-	{
-	case CHIP_ESP32:
-		model = "ESP32";
-		break;
-	case CHIP_ESP32S2:
-		model = "ESP32-S2";
-		break;
-	case CHIP_ESP32S3:
-		model = "ESP32-S3";
-		break;
-	case CHIP_ESP32C3:
-		model = "ESP32-C3";
-		break;
-	case CHIP_ESP32H2:
-		model = "ESP32-H2";
-		break;
-	default:
-		model = "Unknown";
-		break;
-	}
 	JsonDocument respJson;
-	respJson["chip"]["model"] = model;
-	respJson["chip"]["cores"] = chip_info.cores;
-	respJson["chip"]["revision"] = chip_info.revision;
-	respJson["chip"]["psram"] = psramFound();
-	respJson["chip"]["features"]["wifi"] = (bool)(chip_info.features & CHIP_FEATURE_WIFI_BGN);
-	respJson["chip"]["features"]["bt"] = (bool)(chip_info.features & CHIP_FEATURE_BT);
-	respJson["chip"]["features"]["ble"] = (bool)(chip_info.features & CHIP_FEATURE_BLE);
-	respJson["clock"]["cpu_mhz"] = getCpuFrequencyMhz();
-	respJson["flash"]["size_mb"] = spi_flash_get_chip_size() / (1024 * 1024);
+	respJson["chip"]["model"] = ESP.getChipModel();
+	respJson["chip"]["cores"] = ESP.getChipCores();
+	respJson["chip"]["revision"] = ESP.getChipRevision();
+	respJson["chip"]["psram"] = ESP.getPsramSize();
+	respJson["clock"]["cpu_mhz"] = ESP.getCpuFreqMHz();
+	respJson["flash"]["size_mb"] = ESP.getFlashChipSize() / (1024 * 1024);
 	String response;
 	serializeJson(respJson, response);
 	request->send(200, "application/json", response);
@@ -473,15 +445,15 @@ void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t l
 		.action = ACTION_POSITION,
 		.dir = static_cast<StepperDirection>(ra_dir),
 		.pulse_count = ra_step,
-		.delay_us = Stepper_RA_DelayMs,
+		.delay_us = Stepper_RA_StepHalfPeriodUs,
 		.tracking = tracking};
 	MoveCommand cmd_DEC = {
 		.action = ACTION_POSITION,
 		.dir = static_cast<StepperDirection>(dec_dir),
 		.pulse_count = dec_step,
-		.delay_us = Stepper_DEC_DelayMs,
-		tracking = false}; // In Fact DEC Should not use Tracking MODE
-	bool ok = Stepper_RA_SendCommand(cmd_RA) || Stepper_DEC_SendCommand(cmd_DEC);
+		.delay_us = Stepper_DEC_StepHalfPeriodUs,
+		.tracking = false}; // In Fact DEC Should not use Tracking MODE
+	bool ok = Stepper_RA_SendCommand(cmd_RA) && Stepper_DEC_SendCommand(cmd_DEC);
 	if (!ok)
 	{
 		request->send(500, "application/json", "Stepper Motor is Running!!!");

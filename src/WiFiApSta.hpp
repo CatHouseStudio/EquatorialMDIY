@@ -52,6 +52,18 @@ void WiFi_AP_Init()
             Serial0_Println(WiFi.softAPIP().toString());
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
+        else
+        {
+            String ap_ssid = configJson["ssid"];
+            String ap_password = configJson["pwd"];
+            Serial0_Println("Using Customize configuration");
+            Serial0_Println("Setting AP (Access Point)…");
+            WiFi.softAP(ap_ssid, ap_password);
+            WiFi.softAPConfig(localIP, gateway, subnet);
+            Serial0_Print("AP IP address: ");
+            Serial0_Println(WiFi.softAPIP().toString());
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
     }
     else
     {
@@ -70,7 +82,6 @@ void WiFi_AP_Init()
 void WiFi_AP_Reboot(String ap_ssid, String ap_pwd)
 {
     Serial0_Println("Resetting AP (Access Point)…");
-    WiFi.softAPdisconnect(true);
     vTaskDelay(100 / portTICK_PERIOD_MS);
     WiFi.softAP(ap_ssid, ap_pwd);
 }
