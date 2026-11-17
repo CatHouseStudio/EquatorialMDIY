@@ -176,7 +176,7 @@ void handleWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEven
 		serializeJson(respJson, response);
 		client->text(response);
 	}
-	if (type == WS_DISCONNECT)
+	if (type == WS_EVT_DISCONNECT)
 	{
 		Serial0_Printf("WS client disconnected: %u\n", client->id());
 		return;
