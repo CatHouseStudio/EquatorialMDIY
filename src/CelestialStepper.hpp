@@ -313,8 +313,13 @@ static void Stepper_InitAxis(StepperAxis &axis)
 // 两轴共用的任务体
 static void Stepper_TaskMain(StepperAxis &axis)
 {
-    queueHandle_Stepper_DEC = xQueueCreate(1, sizeof(MoveCommand));
-    xTaskHandle_Stepper_DEC = xTaskGetCurrentTaskHandle();
+    if (axis.queue == NULL)
+    {
+        Serial0_Printf("Stepper %s: queue is NULL, call InitCelestialStepper() first!", axis.cfg->name);
+        vTaskDelete(NULL);
+        return;
+    }
+
     MoveCommand cmd;
     for (;;)
     {
