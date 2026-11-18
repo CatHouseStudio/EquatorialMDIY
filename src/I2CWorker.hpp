@@ -1,3 +1,5 @@
+#pragma once
+
 #include "TiltFusionMPU6050.hpp"
 #include "INASensor.hpp"
 #include "OLEDScreen.hpp"
@@ -56,6 +58,11 @@ void task_I2CWorker(void *parameters)
             }
         }
         safeUpdateINA();
+        safeGetAngles(mpuResult);                                    // 每轮读一次姿态
+        if (xQueueHandle_MPU_I2CWorker != NULL)
+        {
+            xQueueOverwrite(xQueueHandle_MPU_I2CWorker, &mpuResult); // 队列长度 1，覆盖写入
+        }
         drawOLEDStatusBar();
         drawOLEDMainData();
     }
@@ -63,6 +70,7 @@ void task_I2CWorker(void *parameters)
 
 bool GetLatestMPU(MPUResult &out)
 {
+    if (xQueueHandle_MPU_I2CWorker == NULL) return false; // 队列由 I2C 任务创建，可能还没就绪
     return xQueuePeek(xQueueHandle_MPU_I2CWorker, &out, pdMS_TO_TICKS(0)) == pdTRUE;
 }
 
@@ -73,5 +81,6 @@ bool GetLatestMPU(MPUResult &out)
 
 bool SendI2CCommand(const I2CCommand &cmd)
 {
+    if (xQueueHandle_CMD_I2CWorker == NULL) return false;
     return xQueueSend(xQueueHandle_CMD_I2CWorker, &cmd, pdMS_TO_TICKS(0)) == pdPASS;
 }

@@ -135,13 +135,11 @@ const uint8_t Stepper_RA_Initialize_Dir = HIGH;
 const uint8_t Stepper_RA_Work_Dir = LOW;
 const uint32_t Stepper_RA_StepHalfPeriodUs = 250; // 半步周期 µs（原 Stepper_RA_DelayMs）
 const uint32_t Stepper_RA_Acceleration = 1000000;  // 步/秒²，取大值≈原来的恒速起停
-const int Stepper_RA_K = 114514;                   // Mechanical structure reduction ratio coefficient
 // DEC Stepper
 const uint8_t Stepper_DEC_Initialize_Dir = HIGH;
 const uint8_t Stepper_DEC_Work_Dir = LOW;
 const uint32_t Stepper_DEC_StepHalfPeriodUs = 250; // 半步周期 µs（原 Stepper_DEC_DelayMs）
 const uint32_t Stepper_DEC_Acceleration = 1000000;  // 步/秒²，取大值≈原来的恒速起停
-const int Stepper_DEC_K = 114514;                   // Mechanical structure reduction ratio coefficient
 
 // Serial 0 Config
 const uint8_t Serial0_Max_Message_Length = 100;

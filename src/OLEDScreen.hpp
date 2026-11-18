@@ -99,6 +99,7 @@ const uint8_t OLED_Screen_Width = 128;
 
 Adafruit_SSD1306 display(OLED_Screen_Width, OLED_Screen_Height, &Wire, -1);
 SemaphoreHandle_t semphr_OLEDScreenMutex = NULL;
+bool OLED_Available = false;
 void InitOLEDScreen();
 void playBootAnimation();
 void drawOLEDMainData();
@@ -109,14 +110,21 @@ void safeUpdateOLEDScreen(const OLEDConfig &cfg);
 
 void InitOLEDScreen()
 {
-    bool success = display.begin(SSD1306_SWITCHCAPVCC, 0x3c);
-    if (!success)
+    // 互斥量必须先于任何使用点创建：begin() 失败也要能安全退出，
+    // 否则后续 xSemaphoreTake(NULL) 会触发 configASSERT 直接 panic
+    if (semphr_OLEDScreenMutex == NULL)
+    {
+        semphr_OLEDScreenMutex = xSemaphoreCreateMutex();
+    }
+
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3c))
     {
         Serial0_Println("SSD1306 initialization failed!");
+        OLED_Available = false;
         return;
     }
     Serial0_Println("SSD1306 initialization succeed!");
-    semphr_OLEDScreenMutex = xSemaphoreCreateMutex();
+    OLED_Available = true;
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
@@ -128,6 +136,7 @@ void InitOLEDScreen()
 
 void playBootAnimation()
 {
+    if (!OLED_Available) return;
     if (xSemaphoreTake(semphr_OLEDScreenMutex, portMAX_DELAY) == pdTRUE)
     {
         // 静态显示保持几百 ms
@@ -143,6 +152,7 @@ void playBootAnimation()
 
 void drawOLEDMainData()
 {
+    if (!OLED_Available) return;
     if (xSemaphoreTake(semphr_OLEDScreenMutex, portMAX_DELAY) == pdTRUE)
     {
         // 获取 MPU 数据（带 mutex）
@@ -173,6 +183,7 @@ void drawOLEDMainData()
 }
 void drawOLEDStatusBar()
 {
+    if (!OLED_Available) return;
     // 获取状态
     if (xSemaphoreTake(semphr_OLEDScreenMutex, portMAX_DELAY) == pdTRUE)
     {
@@ -225,6 +236,7 @@ void updateOLEDScreen(const OLEDConfig &cfg)
 
 void safeUpdateOLEDScreen(const OLEDConfig &cfg)
 {
+    if (!OLED_Available) return;
     if (xSemaphoreTake(semphr_OLEDScreenMutex, portMAX_DELAY) == pdTRUE)
     {
         updateOLEDScreen(cfg);

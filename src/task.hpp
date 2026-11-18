@@ -85,6 +85,7 @@ void task_AsyncWebServer(void *parameters)
     Serial0_Println("Server Started!");
     for (;;)
     {
+        WiFi_Poll();
         ElegantOTA.loop();
         ws.cleanupClients();
         vTaskDelay(pdMS_TO_TICKS(2000));

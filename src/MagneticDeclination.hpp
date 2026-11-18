@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Configuration.h"
 #include "SerialMessage.hpp"
 // =================== 配置参数 ===================

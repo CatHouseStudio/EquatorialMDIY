@@ -46,9 +46,6 @@ struct MoveCommand
     bool tracking;
 };
 
-uint32_t Pulse_RA(float azimuth);
-uint32_t Pulse_DEC(float altitude);
-
 bool Is_Stepper_RA_running();
 bool Is_Stepper_DEC_running();
 
@@ -105,20 +102,6 @@ static StepperAxis axis_DEC = {&stepperConfig_DEC, NULL, NULL, false};
 
 // FastAccelStepper 引擎接管 STEP/DIR 引脚，脉冲由硬件定时器产生
 FastAccelStepperEngine stepperEngine;
-
-// 相对位置偏移运动量计算
-
-uint32_t Pulse_RA(float ra)
-{
-    // TODO Depend on Mechanical structure reduction ratio coefficient
-    return (uint32_t)(ra * Stepper_RA_K);
-}
-
-uint32_t Pulse_DEC(float dec)
-{
-    // TODO Depend on Mechanical structure reduction ratio coefficient
-    return (uint32_t)(dec * Stepper_DEC_K);
-}
 
 // ===========================================================================
 // 内部实现
@@ -179,11 +162,13 @@ static void Stepper_Halt(StepperAxis &axis)
     }
 }
 
-// 等本段运动结束；返回 true 表示收到停止命令。
+// 等本段运动结束；返回 true 表示收到停止命令或超时强制停止。
 // 停止命令先入队、后断硬件，所以 isRunning() 变 false 时停止命令一定已经在队列里；
 // 这里先查队列再查 isRunning()，不会把急停误判成"自然走完"。
-static bool Stepper_WaitDone(StepperAxis &axis)
+// maxWaitMs = 0 表示不限时（持续运行必须不限时）。
+static bool Stepper_WaitDone(StepperAxis &axis, uint32_t maxWaitMs)
 {
+    uint32_t waited = 0;
     for (;;)
     {
         if (Stepper_TakeStop(axis))
@@ -194,8 +179,25 @@ static bool Stepper_WaitDone(StepperAxis &axis)
         {
             return false;
         }
+        if (maxWaitMs != 0 && waited >= maxWaitMs)
+        {
+            Serial0_Printf("Stepper %s: no progress for %lu ms, forcing halt",
+                           axis.cfg->name, (unsigned long)maxWaitMs);
+            Stepper_Halt(axis);
+            return true;
+        }
         vTaskDelay((TickType_t)1); // 1 ms 轮询，停止命令的响应延迟不超过一个 tick
+        ++waited;
     }
+}
+
+// 按"步数 × 整步周期"估算超时，留 50% + 10 s 余量，避免长距离定位被误判
+static uint32_t Stepper_CommandTimeoutMs(const StepperAxis &axis, uint32_t steps)
+{
+    const uint64_t periodUs = Stepper_StepPeriodUs(axis.cfg->halfPeriodUs);
+    uint64_t ms = (uint64_t)steps * periodUs / 1000ULL;
+    ms = ms + ms / 2 + 10000ULL;
+    return (ms > 0xFFFFFFFFULL) ? 0xFFFFFFFFUL : (uint32_t)ms;
 }
 
 // 起一段有限步数的运动
@@ -239,7 +241,7 @@ static void Stepper_ExecCommand(StepperAxis &axis, const MoveCommand &cmd)
     if (cmd.action == ACTION_POSITION && cmd.pulse_count > 0)
     {
         Stepper_StartMove(axis, sign, cmd.pulse_count, axis.cfg->halfPeriodUs);
-        if (Stepper_WaitDone(axis))
+        if (Stepper_WaitDone(axis, Stepper_CommandTimeoutMs(axis, cmd.pulse_count)))
         {
             // 定位途中被停止：确保停住，并且不再进入跟踪段
             Stepper_Halt(axis);
@@ -256,7 +258,7 @@ static void Stepper_ExecCommand(StepperAxis &axis, const MoveCommand &cmd)
             return;
         }
         Stepper_StartRun(axis, sign, cmd.delay_us);
-        if (Stepper_WaitDone(axis))
+        if (Stepper_WaitDone(axis, 0))
         {
             Stepper_Halt(axis);
         }

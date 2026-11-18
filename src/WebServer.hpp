@@ -12,6 +12,7 @@
 static AsyncWebServer server(80);
 static AsyncWebSocket ws("/ws");
 unsigned long ota_progress_millis = 0;
+volatile bool ota_in_progress = false;
 
 class LoggingMiddleware : public AsyncMiddleware
 {
@@ -82,6 +83,8 @@ void handleSetCurrentMotorPostion(AsyncWebServerRequest *request, uint8_t *data,
 
 void onOTAStart()
 {
+	ota_in_progress = true;
+	ota_progress_millis = millis();
 	// Log when OTA has started
 	Serial0_Println("OTA update started!");
 	// <Add your own code here>
@@ -92,12 +95,14 @@ void onOTAProgress(size_t current, size_t final)
 	// Log every 1 second
 	if (millis() - ota_progress_millis > 1000)
 	{
+		ota_progress_millis = millis();
 		Serial0_Printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
 	}
 }
 
 void onOTAEnd(bool success)
 {
+	ota_in_progress = false;
 	// Log when OTA has finished
 	if (success)
 	{
@@ -184,21 +189,12 @@ void handleWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEven
 	if (type == WS_EVT_DATA)
 	{
 		AwsFrameInfo *info = (AwsFrameInfo *)arg;
-		bool isCompleteTextFrame =
-			info->final &&
-			info->index == 0 &&
-			info->len == len &&
-			info->opcode == WS_TEXT;
-		if (!isCompleteTextFrame)
+		// 分片帧直接拒绝；原来的写法会拿分片去 deserializeJson，
+		// 既读越界，又没有真正拦住分片
+		if (!(info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT))
 		{
-			// websocket content error
-			JsonDocument reqJson;
-			DeserializationError reqJsonerror = deserializeJson(reqJson, data);
-			if (reqJsonerror)
-			{
-				client->text("Fragmented WS frame not supported");
-				return;
-			}
+			client->text("Fragmented WS frame not supported");
+			return;
 		}
 
 		handleWsJson(client, data, len);
@@ -209,7 +205,7 @@ void handleWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEven
 void handleWsJson(AsyncWebSocketClient *client, uint8_t *data, size_t len)
 {
 	JsonDocument reqJson;
-	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data, len);
 	if (reqJsonerror)
 	{
 		client->text("Invalid JSON");
@@ -393,7 +389,7 @@ void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len
 {
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data, len);
 	if (reqJsonerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
@@ -408,6 +404,10 @@ void handleSetAPConfig(AsyncWebServerRequest *request, uint8_t *data, size_t len
 		if (ap_ssid.equals("")) // system error, ssid should not be empty
 		{
 			request->send(400, "text/plain", "ap_ssid should not be empty!");
+		}
+		else if (!ap_pwd.isEmpty() && (ap_pwd.length() < 8 || ap_pwd.length() > 63))
+		{
+			request->send(400, "text/plain", "password must be 8~63 chars, or empty for open AP");
 		}
 		else
 		{
@@ -427,20 +427,35 @@ void handleSetRatioConfig(AsyncWebServerRequest *request, uint8_t *data, size_t 
 }
 void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/pluse_to_target
 {
+	// OTA 期间禁止启动运动：固件写入与电机同时进行没有意义，还会抢 flash
+	if (ota_in_progress)
+	{
+		request->send(409, "application/json", "OTA in progress");
+		return;
+	}
 	// check req json validation
 	JsonDocument reqJson;
-	DeserializationError reqJsonerror = deserializeJson(reqJson, data);
+	DeserializationError reqJsonerror = deserializeJson(reqJson, data, len);
 	if (reqJsonerror)
 	{
 		request->send(400, "text/plain", "Invalid JSON");
 		return;
 	}
 
-	uint32_t ra_step = reqJson["RA"]["step"];	 // 114514
+	uint32_t ra_step = reqJson["RA"]["steps"];	 // 114514
 	uint32_t ra_dir = reqJson["RA"]["dir"];		 // 0
 	uint32_t dec_step = reqJson["DEC"]["steps"]; // 1145
 	uint32_t dec_dir = reqJson["DEC"]["dir"];	 // 1
 	bool tracking = reqJson["tracking"];		 // true
+	// dir 只有 0(工作方向) / 1(初始化方向) 两个合法值。
+	// 越界值直接 static_cast 进枚举是未定义行为，必须挡在构造命令之前。
+	// 「停止」走 /api/stop_moving，不通过 dir 表达。
+	if (ra_dir > 1 || dec_dir > 1)
+	{
+		request->send(400, "text/plain", "dir must be 0 (work) or 1 (init)");
+		return;
+	}
+
 	MoveCommand cmd_RA = {
 		.action = ACTION_POSITION,
 		.dir = static_cast<StepperDirection>(ra_dir),
@@ -453,17 +468,17 @@ void handlePluseToTarget(AsyncWebServerRequest *request, uint8_t *data, size_t l
 		.pulse_count = dec_step,
 		.delay_us = Stepper_DEC_StepHalfPeriodUs,
 		.tracking = false}; // In Fact DEC Should not use Tracking MODE
-	bool ok = Stepper_RA_SendCommand(cmd_RA) && Stepper_DEC_SendCommand(cmd_DEC);
-	if (!ok)
-	{
-		request->send(500, "application/json", "Stepper Motor is Running!!!");
-		return;
-	}
+	// 两轴相互独立：各发各的、各自报告，不用 && / || 让一根轴的结果牵连另一根
+	const bool ra_ok = Stepper_RA_SendCommand(cmd_RA);
+	const bool dec_ok = Stepper_DEC_SendCommand(cmd_DEC);
+
 	JsonDocument respJson;
 	String response;
-	respJson["status"] = "moving";
+	respJson["status"] = (ra_ok || dec_ok) ? "moving" : "busy";
+	respJson["RA"] = ra_ok ? "moving" : "busy";
+	respJson["DEC"] = dec_ok ? "moving" : "busy";
 	serializeJson(respJson, response);
-	request->send(200, "application/json", response);
+	request->send((ra_ok || dec_ok) ? 200 : 409, "application/json", response);
 }
 void handleSetCurrentMotorPostion(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) // POST http://localhost:3000/api/set_current_motor_position
 {
